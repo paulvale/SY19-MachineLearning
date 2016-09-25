@@ -3,19 +3,19 @@
 prostate.data = read.table("prostate.data.txt")
 
 # INSTALLATION PACKAGES
-#install.packages("FNN")
+install.packages("FNN")
 #install.packages("automap")
 #install.packages("spacetime")
 #install.packages("sp")
 #install.packages("zoo")
-#install.packages("hydroGOF")
+install.packages("hydroGOF")
 
 # LOAD PACKAGES
 library("FNN", character.only = TRUE)
-library("automap", character.only = TRUE)
-library("spacetime", character.only = TRUE)
-library("sp", character.only = TRUE)
-library("zoo", character.only = TRUE)
+#library("automap", character.only = TRUE)
+#library("spacetime", character.only = TRUE)
+#library("sp", character.only = TRUE)
+#library("zoo", character.only = TRUE)
 library("hydroGOF", character.only = TRUE)
 
 # ===================================
