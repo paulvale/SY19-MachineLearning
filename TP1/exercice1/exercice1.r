@@ -23,7 +23,7 @@ library("hydroGOF", character.only = TRUE)
 # ===================================
 
 plot(prostate.data,col='blue',pch=20)
-
+readline(prompt="Press [enter] to continue")
 # Valeur de train sans etiquette
 train = subset(prostate.data,train == T, select=c(lcavol,lweight,lbph,age))
 # Valeur de test sans etiquette
@@ -38,6 +38,8 @@ lpsa.test = subset(prostate.data,train == F, select=c(lpsa))
 #comparison <- data.frame(lpsa.test, test.prediction)
 #plot(comparison)
 kValues = 3:30
+kOpti = 3
+minMSE = 100
 kMSE.train = rep(0,length(kValues))
 kMSE.test = rep(0,length(kValues))
 
@@ -61,6 +63,10 @@ for(kValue in kValues) {
     test.prediction = matrix(test.prediction)
     kMSE.test[kValue-2] = mse(test.prediction,lpsa.test)
 
+    if(minMSE > kMSE.test[kValue-2]) {
+        minMSE = kMSE.test[kValue-2]
+        kOpti = kValue
+    }
 }
 
 resultKGraph.train = data.frame(kValues,kMSE.train)
@@ -69,3 +75,7 @@ plot(resultKGraph.train,type='b', ylim=range(c(kMSE.train, kMSE.test)))
 # second plot  EDIT: needs to have same ylim
 par(new = TRUE)
 plot(resultKGraph.test,type='b', col='red', ylim=range(c(kMSE.train, kMSE.test)), axes = FALSE, xlab = "", ylab = "")
+readline(prompt="Press [enter] to continue")
+cat("Best Value for K: ", kOpti,"\n")
+cat("Value of MSE:     ", minMSE,"\n")
+readline(prompt="Press [enter] to continue")
