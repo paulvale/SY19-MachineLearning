@@ -32,7 +32,7 @@ points(prostate.data$lpsa,reg.smsa$fitted.values,pch=19,col="red",cex=0.7)
 readline(prompt="Press [enter] to continue")
 
 # === Q4 ===
-# Pour les residus brute :
+# Pour les residus bruts :
 print("les residus bruts :")
 plot(prostate.data$lpsa,reg.smsa$residuals,col="red")
 abline(a=0,b=0)
@@ -90,9 +90,17 @@ readline(prompt="Press [enter] to continue")
 # Le QQ plot est un graphe qui nous permet de verifier graphiquement la normalite de notre regression
 # celui est notamment accessible directement via nos data de reg.smsa
 
-# Comme on peut l'observer, nous avons belle et bien une droite et pouvons donc 
+# Comme on peut l'observer, nous avons bel et bien une droite et pouvons donc
 # conclure via ce graphique que nos residus suivent bien une loi normale
 plot(reg.smsa, which = 2)
+
+# === Q6 ===
+# Pour voir la stabilité du modèle (influence de chaque observation sur les coefficients estimés Bi) il faut utiliser la distance de Cook
+d1 <- cooks.distance(reg.smsa)
+plot(d1)
+#   On peut observer sur le graphe que les points ne sont pas abérants (bien inférieur à 1), les valeurs ne sont donc pas trop atypique.
+
+
 
 
 
