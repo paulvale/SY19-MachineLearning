@@ -95,23 +95,38 @@ readline(prompt="Press [enter] to continue")
 plot(reg.smsa, which = 2)
 
 # === Q6 ===
-#   Pour voir la stabilité du modèle (influence de chaque observation sur les coefficients estimés Bi) il faut utiliser la distance de Cook. Cook mesure l'effet de la suppression de l'observation i sur la prédiction de toutes les valeurs
-d1 <- cooks.distance(reg.smsa)
-plot(d1)
-#   On peut observer sur le graphe que les points ne sont pas abérants (bien inférieur à 1), les valeurs ne sont donc pas trop atypiques. On peut aussi utiliser : plot(reg.smsa,which=4)
+# Pour voir la stabilite du modele ( l'influence de chaque obs sur le coeff estime beta_i) il faut utiliser la distance de cook
+# Cook mesure l'effet de la suppression de l'obs i sur la prediction 
+# d1 <- cooks.distance(reg.smsa)
+# plot(d1)
+plot(reg.smsa, which = 4)
 
+# On peut observer sur le graphe que nous n'avons pas de points abberants => aucune donnee atypique
 
 # === Q7 ===
-#   j'ai repris le script avec seulement 2 predicteurs, les plus significatifs : lcavol et lweight
+# boucle 
+# ====
+# ==== 
+# observation faite sur predicteurs = lcavol et lweight 
+# - les intervalles de confiance se reduisent, on se retrouve plus proche de la moy
+# - QQplot est plus fitte a la droite 
+# - Cook : plus ou moins identique
+
+# Pour resumer, on peut voir que les resultats sont presques equivalents que lorsque l'on avait tous les predicteurs
+# on peut expliquer cela, par la significativite des predicteurs
+
+# === Q8 ===
+# effetuer ...
+
+
+
 reg.smsa2 <- lm(prostate.data$lpsa~prostate.data$lcavol+prostate.data$lweight)
 print(summary(reg.smsa2))
 print(confint(reg.smsa2,level=0.95))
-#   On peut voir que les intervalles de confiance réduisent (0.35 avant et 0.27 maintenant pour lcavol, même phénomène pour lweight) les valeurs sont donc plus concentrés autour de la moyenne
 
 plot(prostate.data$lpsa,prostate.data$lpsa,col="black")
 abline(a=0,b=1)
 points(prostate.data$lpsa,reg.smsa2$fitted.values,pch=19,col="red",cex=0.7)
-#   répartition équivalente à l'autre sous ensemble de prédicteur
 
 # Pour les residus bruts :
 print("les residus bruts :")
@@ -158,19 +173,13 @@ plot(prostate.data$lweight,residualsStudent2,col="black")
 abline(a=0,b=0)
 readline(prompt="Press [enter] to continue")
 
-# QQPLOT plus fitté à la courbe linéaire
 plot(reg.smsa2, which = 2)
 readline(prompt="Press [enter] to continue")
 
-# Distance de COOK - graphe plus ou moins équivalent, pas d'observations trop atypiques
 plot(reg.smsa2,which=4)
 readline(prompt="Press [enter] to continue")
 plot(reg.smsa,which=4)
 
-# Pour résumer, on peut voir que les résultats sont presque équivalent que lorsqu'on avait tous les predicteurs. On peut expliquer cela par le fait qu'on ait pris les predicteurs les plus significatifs sur cette regression lineaire.
-
-#   === Q8 ===
-#   Effectuer quelques transformations non linéaires de certains predicteurs
 
 
 
