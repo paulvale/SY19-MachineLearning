@@ -3,7 +3,7 @@ prostate.data = read.table("data/prostate.data.txt")
 
 
 #Linear regression method
-reg.smsa <- lm(prostate.data$lpsa~prostate.data$lcavol+prostate.data$lweight+prostate.data$age+prostate.data$lbph+prostate.data$svi+prostate.data$lcp+prostate.data$gleason+prostate.data$pgg45)
+reg.smsa <- lm(lpsa ~. - train ,data=prostate.data)
 
 # === Q1 ===
 # Les coefficients significativement non nuls sont lcavol, lweigth,svi
@@ -106,6 +106,18 @@ plot(reg.smsa, which = 4)
 # === Q7 ===
 # boucle 
 # ====
+#allCombination = leaps(prostate.data[,1:8],prostate.data[,9])$which
+# allCombinationSize = dim(allCombination)
+
+# for(i in 1:allCombinationSize[1]){
+  #predictors <- prostate.data[,which(allCombination[i,])]
+  #print(prostate.data$lpsa)
+
+  #predictors[,"lpsa"] <- prostate.data[,9]
+  #reg.smsaCombination <- lm(prostate.data$lpsa~.-train, data=predictors)
+  #plot(reg.smsa)
+#}
+
 # ==== 
 # observation faite sur predicteurs = lcavol et lweight 
 # - les intervalles de confiance se reduisent, on se retrouve plus proche de la moy
@@ -115,72 +127,11 @@ plot(reg.smsa, which = 4)
 # Pour resumer, on peut voir que les resultats sont presques equivalents que lorsque l'on avait tous les predicteurs
 # on peut expliquer cela, par la significativite des predicteurs
 
-# === Q8 ===
-# effetuer ...
+#Q7
+reg1<-lm(lpsa ~. - train -lweight,data=prostate.data)
+reg1<- lm(lpsa ~ lcavol+lweight+svi  ,data=prostate.data)
+# etc.
 
-
-
-reg.smsa2 <- lm(prostate.data$lpsa~prostate.data$lcavol+prostate.data$lweight)
-print(summary(reg.smsa2))
-print(confint(reg.smsa2,level=0.95))
-
-plot(prostate.data$lpsa,prostate.data$lpsa,col="black")
-abline(a=0,b=1)
-points(prostate.data$lpsa,reg.smsa2$fitted.values,pch=19,col="red",cex=0.7)
-
-# Pour les residus bruts :
-print("les residus bruts :")
-plot(prostate.data$lpsa,reg.smsa2$residuals,col="red")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-plot(prostate.data$lcavol,reg.smsa2$residuals,col="blue")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-plot(prostate.data$lweight,reg.smsa2$residuals,col="black")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-# Pour les residus centre reduit:
-residualsStd2 <- rstandard(reg.smsa2)
-print("les residus standardises :")
-plot(prostate.data$lpsa,residualsStd2,col="red")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-plot(prostate.data$lcavol,residualsStd2,col="blue")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-plot(prostate.data$lweight,residualsStd2,col="black")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-
-# Pour les residus studentise:
-residualsStudent2 <- rstudent(reg.smsa2)
-print("les residus studentises :")
-plot(prostate.data$lpsa,residualsStudent2,col="red")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-plot(prostate.data$lcavol,residualsStudent2,col="blue")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-plot(prostate.data$lweight,residualsStudent2,col="black")
-abline(a=0,b=0)
-readline(prompt="Press [enter] to continue")
-
-plot(reg.smsa2, which = 2)
-readline(prompt="Press [enter] to continue")
-
-plot(reg.smsa2,which=4)
-readline(prompt="Press [enter] to continue")
-plot(reg.smsa,which=4)
-
-
-
-
-
+# Q8
+reg2<- lm(lpsa ~ lcavol+lweight+I(lweight^2) +svi  ,data=prostate.data)
+# maintenant, les coefficients de lweight et lweight2 ne sont plus significatifs !
