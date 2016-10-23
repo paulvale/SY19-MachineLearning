@@ -13,6 +13,11 @@ y <- phoneme$speaker
 # 1ere question : devons nous entrainer notre modele a reconnaitre les mots d'un certain locuteur 
 # ou devons nous reussir a reconnaitre pour n'importe qui et c'est la reconnaissance du mot qui
 # est importante ?
+#		Marceau : De mon point de vue, ce jeu de données est fait pour aider a la reconnaissance de discours ("from the TIMIT database 
+#		which is a widely used resource for research in speech recognition"). On entend par la que les personnes qui veulent creer des programmes de reconnaissances vocales utilisent cette base de donnees
+#		En fouillant un peu sur internet on peut se rendre copte assez facilement qu'au final on a aucune info sur ces speakers. Je penche vers la version suivante :
+#		Nous devons entrainer notre modele pour reussir a reconnaitre pour n'importe qui et c'est la reconnaissance du mot qui
+# 		est importante
 
 # cette prise de position est primordiale, car elle va notamment impliquer une difference au niveau
 # de notre division des datas ( test et apprentissage)
@@ -22,6 +27,9 @@ y <- phoneme$speaker
 # - si on veut reconnaitre maintenant avant tous l'utilisation des mots dans le discours, 
 # alors il est plus interessant de garder 2/3 des personnes et donc tout leur enregistrements
 # dans les donnees d'apprentissage et de garder 1/3 des personnes inconnus par notre modele.
+#		Marceau : Je penche donc vers ce deuxieme modele. J'aurai cependant une petite remarque a faire la dessus : comme nous cherchons ici a reconnaitre 
+#		seuleemnt certains mots (sh, dcl ...), le but de notre modele sera de dire : tiens le mot que je viens d'entendre c'est "sh".
+#		Il serait peut etre plus judicieux de prendre 2/3 des enregistrements de chaque mot à reconnaitre.
 
 # === Description de nos datas ===
 # je t'invite deja a lire et relire le doc phoneme.info.txt qui nous ait fournis
@@ -42,4 +50,55 @@ y <- phoneme$speaker
 # Pour chacun de nos frames, on fait un log-periodogram, technique utilisé dans la reconnaissance vocale
 # et ce log-periodogram comprend 256 features
 # nos datas 
+
+
+# -------------------------------------------- DATA SEPARATION --------------------------------------------------------
+
+#		Marceau : Je propose la dessus de respecter les 5 criteres de separation donnes par TIMIT
+#			1 : 2/3 de train et 1/3 de test
+#			2 : Aucun speaker ne doit apparaitre dans train et test (il suffit de faire attention pour cela a bien basculer tous les enregistrements
+#				par speakers quand on fait un ensemble)
+#			3 : Toutes les regions doivent apparaitre dans nos ensembles de test/train, avec au moins un speaker de chaque sexe (a verifier a la main)
+#			4 : Tous les phonemes doivent apparaitre (ici on fait justement attention a ca, en prenant la meme proportion de chaque phonemes)
+
+# J'ai analysé chaque jeu de donnees suivant le phoneme, ca m'a permis de creer a la main les ensembles d'apprentissage et de test en faisant attention
+# aux criteres annoces ci dessus. On a bien des ensembles avec 2/3 de train et 1/3 de test, aucun speaker n'apparait dans le test et dans le train. 
+# les speaker de chaque region + pour chaque sexe + pour chaque phoneme sont presents dans nos ensembles de test ET train
+
+#		--- creation de l'ensemble pour les aa ---
+aa <- subset(phoneme,g=='aa')
+#il faut en rajouter 56
+aa.train <- rbind(aa[1:450,],aa[495:507,])
+aa.test <- rbind(aa[451:494,],aa[508:695,])
+
+#		--- creation de l'ensemble pour les sh ---
+sh <- subset(phoneme,g=='sh')
+#il faut en rajouter 67
+sh.train <- rbind(sh[1:569,],sh[621:635,])
+sh.test <- rbind(sh[570:622,],sh[636:872,])
+
+#		--- creation de l'ensemble pour les dcl ---
+dcl <- subset(phoneme,g=='dcl')
+#il faut en rajouter 57
+dcl.train <- rbind(dcl[1:493,],dcl[540:552,])
+dcl.test <- rbind(dcl[494:539,],dcl[553:757,])
+
+#		--- creation de l'ensemble pour les ao ---
+ao <- subset(phoneme,g=='ao')
+#il en manque 77
+ao.train <- rbind(ao[1:667,],ao[730:744,])
+ao.test <- rbind(ao[668:729,],ao[745:1022,])
+
+#		--- creation de l'ensemble pour les iy ---
+iy <- subset(phoneme,g=='iy')
+#il en manque 77
+iy.train <- rbind(iy[1:756,],iy[811:832,])
+iy.test <- rbind(iy[757:812,],iy[833:1163,])
+
+#		--- assemblage de tous les dataframes ---
+phoneme.train <- rbind(aa.train, sh.train, ao.train, dcl.train, iy.train)
+phoneme.test <- rbind(aa.test, sh.test, ao.test, dcl.test, iy.test)
+
+
+
 

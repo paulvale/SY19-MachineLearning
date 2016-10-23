@@ -30,3 +30,30 @@ memberships.
 The data contain 256 columns labelled "x.1" - "x.256", a response
 column labelled "g", and a column labelled "speaker" identifying the
 diffferent speakers.
+
+------- COMPLEMENTS D INFORMATIONS -------
+Les speakers disaient tous la meme phrase : She had your dark suit in 
+greasy wash water all year.
+
+train.dr1.mcpm0.sa1
+dr : signifie Speaker dialect region number (1 - New England; 2 - Northern; 
+3 - North Midland; 4 - South Midland; 5 - Southern; 6 - New York City
+; 7 - Western; 8 - Army Brat (moved around))
+mcpm0 : Ca doit etre l'identifiant du speaker
+sa1 : tous les speakers ont ce code
+
+La division de l'ensemble de test/train est une simple suggestion.
+Elle a été effectué selon les criteres suivant :
+  1- Roughly 20 to 30% of the corpus should be used for testing purposes,
+     leaving the remaining 70 to 80% for training.
+
+  2- No speaker should appear in both the training and testing portions.
+
+  3- All the dialect regions should be represented in both subsets, with 
+     at least 1 male and 1 female speaker from each dialect.f
+
+  4- The amount of overlap of text material in the two subsets should be
+     minimized; if possible no texts should be identical. (ne nous concerne pas)
+
+  5- All the phonemes should be covered in the test material, preferably
+     each phoneme should occur multiple times in different contexts.
