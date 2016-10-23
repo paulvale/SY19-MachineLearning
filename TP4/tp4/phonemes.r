@@ -1,5 +1,11 @@
 # LOAD DATA
+install.packages("FNN")
+install.packages("hydroGOF")
 library(MASS)
+library(pROC)
+library(nnet)
+library("FNN", character.only = TRUE)
+library("hydroGOF", character.only = TRUE)
 phoneme = read.table("data/phoneme.data.txt",header=T,sep=",")
 # ====
 # x.1, x.2, ... x.256, g, speaker
@@ -102,7 +108,7 @@ phoneme.train.data <- phoneme.train[,1:257]
 phoneme.train.label <- phoneme.train$g
 phoneme.test <- rbind(aa.test, sh.test, ao.test, dcl.test, iy.test)
 phoneme.test.data <- phoneme.test[,1:257]
-phoneme.test.label <- phoneme.test$g
+phoneme.test.label <- phoneme.test[,258]
 
 
 # ------------------------------------------------ CONSTRUCTION OF MODELS -------------------------------------------------
@@ -125,6 +131,47 @@ phoneme.qda.error <- 1 - sum(diag(phoneme.qda.perf))/(nrow(phoneme.test))
 # pourquoi pas faire une regression logistique en predisant les probabilité de la classe 1, 2, 3 ,4 et 5
 # meme chose nen regression lineaire
 # meme chose avec des kppv
+
+#		--- Regression lineaire ---
+#phoneme.glm <- glm(phoneme.train.label~.,data=phoneme.train.data, family=binomial)
+#phoneme.glm.pred <- predict(phoneme.glm,newdata=phoneme.test.data,type='response') #donne les prob predites
+#phoneme.glm.perf <- table(phoneme.test.label,phoneme.glm.pred>0.2)
+#phoneme.glm.err <- 1 - sum(diag(phoneme.glm.perf))/(nrow(phoneme.test))
+
+#ne marche pas car plusieurs classes (plus que 2)
+
+#phoneme.glm.aa <- f1(phoneme.train.label,'aa')
+#phoneme.glm.ao <- f1(phoneme.train.label,'ao')
+#phoneme.glm.dcl <- f1(phoneme.train.label,'dcl')
+#phoneme.glm.iy <- f1(phoneme.train.label,'iy')
+#phoneme.glm.sh <- f1(phoneme.train.label,'sh')
+#phoneme.glm.global <- matrix(c(phoneme.glm.aa, phoneme.glm.ao,phoneme.glm.dcl,phoneme.glm.iy,phoneme.glm.sh),ncol=5,byrow = F)
+#model1 <- multinom(phoneme.glm.global~.,data=phoneme.train.data)
+
+#ne marche pas non plus
+
+#		--- KPPV ---
+phoneme.knn.error <- rep(0,30)
+kOptimal <- 3
+minMSE <- 100
+for(k in 3:30)
+{
+	phoneme.knn.test <- knn(phoneme.train.data,phoneme.test.data,phoneme.train.label,k)
+	pred <- phoneme.knn.test[1:1500]
+	pred <- matrix(pred)
+	#phoneme.knn.error[k-2] <- mse(sim=pred,obs=matrix(phoneme.test.label)) Cela ne marche pas
+	if(minMSE > phoneme.knn.error[k-2]) {
+        minMSE <- phoneme.knn.error[k-2]
+        kOpti <- kValue
+    }
+}
+
+#la methode des kppv me donne des resultats tres bizarre, peut etre qu'il n'aime pas le fait qu'on soit en muliclasse
+
+
+
+
+
 
 
 
