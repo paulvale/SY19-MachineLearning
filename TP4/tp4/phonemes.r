@@ -150,23 +150,17 @@ phoneme.qda.error <- 1 - sum(diag(phoneme.qda.perf))/(nrow(phoneme.test))
 
 #ne marche pas non plus
 
-#		--- KPPV ---
-phoneme.knn.error <- rep(0,30)
-kOptimal <- 3
-minMSE <- 100
-for(k in 3:30)
+#		--- KPPV - 45% d'erreur---
+phoneme.kppv.error <- rep(0,30)
+for(k in 2:8)
 {
-	phoneme.knn.test <- knn(phoneme.train.data,phoneme.test.data,phoneme.train.label,k)
-	pred <- phoneme.knn.test[1:1500]
-	pred <- matrix(pred)
-	#phoneme.knn.error[k-2] <- mse(sim=pred,obs=matrix(phoneme.test.label)) Cela ne marche pas
-	if(minMSE > phoneme.knn.error[k-2]) {
-        minMSE <- phoneme.knn.error[k-2]
-        kOpti <- kValue
-    }
+    phoneme.kppv.pred <- kppv(phoneme.train.data, phoneme.train.label,k,phoneme.test.data)
+    phoneme.kppv.perf <- table(phoneme.test.label,phoneme.kppv.pred)
+	phoneme.kppv.error[k] <- 1 - sum(diag(phoneme.kppv.perf))/(nrow(phoneme.test))
 }
+#Les kppv nous donne un taux d'erreur compris entre 45% et 59%, avec un k optimal à 3
 
-#la methode des kppv me donne des resultats tres bizarre, peut etre qu'il n'aime pas le fait qu'on soit en muliclass
+
 
 
 
