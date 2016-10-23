@@ -1,4 +1,5 @@
 # LOAD DATA
+library(MASS)
 phoneme = read.table("data/phoneme.data.txt",header=T,sep=",")
 # ====
 # x.1, x.2, ... x.256, g, speaker
@@ -97,8 +98,33 @@ iy.test <- rbind(iy[757:812,],iy[833:1163,])
 
 #		--- assemblage de tous les dataframes ---
 phoneme.train <- rbind(aa.train, sh.train, ao.train, dcl.train, iy.train)
+phoneme.train.data <- phoneme.train[,1:257]
+phoneme.train.label <- phoneme.train$g
 phoneme.test <- rbind(aa.test, sh.test, ao.test, dcl.test, iy.test)
+phoneme.test.data <- phoneme.test[,1:257]
+phoneme.test.label <- phoneme.test$g
 
+
+# ------------------------------------------------ CONSTRUCTION OF MODELS -------------------------------------------------
+
+#on doit ici predire une classe et non une valeur, on utilisera donc des methodes de classification et non de regression
+
+#  		--- LDA - 8.6% d erreur ---
+phoneme.lda <- lda(phoneme.train.label~.,data=phoneme.train.data)
+phoneme.lda.pred <- predict(phoneme.lda, newdata=phoneme.test.data)
+phoneme.lda.perf <- table(phoneme.test.label,phoneme.lda.pred$class)
+phoneme.lda.error <- 1 - sum(diag(phoneme.lda.perf))/(nrow(phoneme.test))
+
+#		--- QDA - 18.93% d erreur ---
+phoneme.qda <- qda(phoneme.train.label~.,data=phoneme.train.data)
+phoneme.qda.pred <- predict(phoneme.qda, newdata=phoneme.test.data)
+phoneme.qda.perf <- table(phoneme.test.label,phoneme.qda.pred$class)
+phoneme.qda.error <- 1 - sum(diag(phoneme.qda.perf))/(nrow(phoneme.test))
+
+
+# pourquoi pas faire une regression logistique en predisant les probabilité de la classe 1, 2, 3 ,4 et 5
+# meme chose nen regression lineaire
+# meme chose avec des kppv
 
 
 
