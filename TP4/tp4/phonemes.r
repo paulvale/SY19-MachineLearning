@@ -166,7 +166,7 @@ for(k in 3:30)
     }
 }
 
-#la methode des kppv me donne des resultats tres bizarre, peut etre qu'il n'aime pas le fait qu'on soit en muliclasse
+#la methode des kppv me donne des resultats tres bizarre, peut etre qu'il n'aime pas le fait qu'on soit en muliclass
 
 
 
