@@ -47,9 +47,33 @@ data.test <- data[-indice,]
 label.train <- label[indice]
 label.test <- label[-indice]
 
+# 2 - Centre reduire en fonction de notre apprentissage
+# Scaling donnees app
+data.train.sd <- apply(data.train, 2, sd)
+data.train.mean <- colMeans(data.train)
+data.train <- as.data.frame(scale(data.train))
+
+# Scaling donnees test
+for(i in 1:data.dim[2]){
+  data.test[,i]<-(data.test[,i]-data.train.mean[i])/data.train.sd[i]
+}
+
+# Linear Regression
 data.reg <- lm(label.train ~., data=data.train)
 print(summary(data.reg))
-plot(data.reg)
+
+# Regression diagnostic
+plot(fitted(data.reg))
+readline(prompt="Press [enter] to continue")
+plot(resid(data.reg))
+readline(prompt="Press [enter] to continue")
+plot(rstandard(data.reg))
+readline(prompt="Press [enter] to continue")
+plot(rstudent(data.reg))
+readline(prompt="Press [enter] to continue")
+plot(cooks.distance(data.reg))
+readline(prompt="Press [enter] to continue")
+plot(hatvalues(data.reg))
 
 
 
