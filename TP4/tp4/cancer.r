@@ -1,5 +1,6 @@
 # LOAD DATA
 library(corrplot)
+library(leaps)
 
 cancer = read.table("data/r_breast_cancer.data.txt",header=T,sep=",")
 
@@ -20,7 +21,7 @@ linearRegression <- function(parameters, label){
   #readline(prompt="Press [enter] to continue")
   #plot(hatvalues(reg))
   #readline(prompt="Press [enter] to continue")
-  plot(reg)
+  #plot(reg)
   
   plot(label,label,col="black")     
   abline(a=0,b=1)     
@@ -97,4 +98,22 @@ data.reg <- linearRegression(data.train, label.train)
 # on va donc passer a la selection du modele et des parametres afin d'ameliorer
 # notre modele.
 
+# Forwrad stepwise selection
+reg.fit <- regsubsets(label.train~. , data=data.train, method='forward', nvmax=33)
+plot(reg.fit, scale="r2")
+readline(prompt="Press [enter] to continue")
+reg.fit <- regsubsets(label.train~. , data=data.train, method='backward', nvmax=33)
+plot(reg.fit, scale="r2")
+readline(prompt="Press [enter] to continue")
+reg.fit <- regsubsets(label.train~. , data=data.train, method='exhaustive', nvmax=33)
+plot(reg.fit, scale="adjr2")
+
+# Lorsque l'on regarde les trois differents graphes on se rend compte que dans tous
+# les cas, nous allons avoir un R-Squared tres faible 
+# nous avons de plus pu remarquer lors de notre premier essai 
+# que nous avions une variabilité de certains parametres assez elevés
+# ====
+# on peut donc deja essaye dans un premier temps de complexifier notre modele
+# en effet, le modele lineaire est surement un modele non representatif de 
+# notre set de données
 
