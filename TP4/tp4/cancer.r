@@ -1,6 +1,32 @@
 # LOAD DATA
 library(corrplot)
+
 cancer = read.table("data/r_breast_cancer.data.txt",header=T,sep=",")
+
+linearRegression <- function(parameters, label){
+  reg <- lm(label ~., data=parameters)
+  print(summary(reg))
+  
+  # Regression diagnostic
+  #plot(fitted(reg))
+  #readline(prompt="Press [enter] to continue")
+  #plot(resid(reg))
+  #readline(prompt="Press [enter] to continue")
+  #plot(rstandard(reg))
+  #readline(prompt="Press [enter] to continue")
+  #plot(rstudent(reg))
+  #readline(prompt="Press [enter] to continue")
+  #plot(cooks.distance(reg))
+  #readline(prompt="Press [enter] to continue")
+  #plot(hatvalues(reg))
+  #readline(prompt="Press [enter] to continue")
+  plot(reg)
+  
+  plot(label,label,col="black")     
+  abline(a=0,b=1)     
+  points(label,reg$fitted.values,pch=19,col="red",cex=0.7)
+  return(reg)
+}
 
 # ====
 # Separation des donnees cancer en data et label 
@@ -58,22 +84,17 @@ for(i in 1:data.dim[2]){
   data.test[,i]<-(data.test[,i]-data.train.mean[i])/data.train.sd[i]
 }
 
+
 # Linear Regression
-data.reg <- lm(label.train ~., data=data.train)
-print(summary(data.reg))
+data.reg <- linearRegression(data.train, label.train)
 
-# Regression diagnostic
-plot(fitted(data.reg))
-readline(prompt="Press [enter] to continue")
-plot(resid(data.reg))
-readline(prompt="Press [enter] to continue")
-plot(rstandard(data.reg))
-readline(prompt="Press [enter] to continue")
-plot(rstudent(data.reg))
-readline(prompt="Press [enter] to continue")
-plot(cooks.distance(data.reg))
-readline(prompt="Press [enter] to continue")
-plot(hatvalues(data.reg))
+# Ici on peut voir que l'on a un R-squared ajuste qui est a ... 0.1126 
+# Or , In general, the higher the R-squared, the better the model fits your data.
+# Du coup, ce modele ne va pas du tout !!!!
+# D'ailleurs on le voit au niveau de notre graphiques ! Les valeurs estimees sont
+# trop importantes au debut et pas assez elevees ensuite ...
 
+# on va donc passer a la selection du modele et des parametres afin d'ameliorer
+# notre modele.
 
 
