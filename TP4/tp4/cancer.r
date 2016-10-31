@@ -99,21 +99,36 @@ data.reg <- linearRegression(data.train, label.train)
 # notre modele.
 
 # Forwrad stepwise selection
-reg.fit <- regsubsets(label.train~. , data=data.train, method='forward', nvmax=33)
+reg.fit <- regsubsets(label.train~. , data=data.train, method='forward', nvmax=15)
+print(summary(reg.fit))
 plot(reg.fit, scale="r2")
-readline(prompt="Press [enter] to continue")
-reg.fit <- regsubsets(label.train~. , data=data.train, method='backward', nvmax=33)
-plot(reg.fit, scale="r2")
-readline(prompt="Press [enter] to continue")
-reg.fit <- regsubsets(label.train~. , data=data.train, method='exhaustive', nvmax=33)
-plot(reg.fit, scale="adjr2")
+
+#readline(prompt="Press [enter] to continue")
+#reg.fit <- regsubsets(label.train~. , data=data.train, method='backward', nvmax=15)
+#plot(reg.fit, scale="r2")
+#readline(prompt="Press [enter] to continue")
+#reg.fit <- regsubsets(label.train~. , data=data.train, method='exhaustive', nvmax=15)
+#plot(reg.fit, scale="adjr2")
 
 # Lorsque l'on regarde les trois differents graphes on se rend compte que dans tous
 # les cas, nous allons avoir un R-Squared tres faible 
 # nous avons de plus pu remarquer lors de notre premier essai 
-# que nous avions une variabilité de certains parametres assez elevés
+# que nous avions une variabilite de certains parametres assez eleves
 # ====
 # on peut donc deja essaye dans un premier temps de complexifier notre modele
 # en effet, le modele lineaire est surement un modele non representatif de 
-# notre set de données
+# notre set de donnees
+
+# ===
+# Essai d'un modele plus complexe avec des x2 
+# ===
+# Malheureusement cela n'a servi absolument a rien ... 
+# Le R square est reste le meme ! Je ne retiens donc pas cette hypothese
+# ne voyant pas trop ce que je peux faire de plus au niveau des subsets qui
+# semblent vraiment pas interessant ici
+# ===
+# Je vais tout de meme tout refaire dans un nouveau fichier car malheureusement je viens 
+# de comprendre comment faire pour voir aussi comment utiliser le Cross Validation
+# et il serait plus interessant de le faire afin de pouvoir mieux 
+# commenter nos resultats
 
