@@ -167,3 +167,19 @@ plot(num_pred,CV, type="l")
 # pour notre modele que le subset selection
 
 
+# ===
+# Derniere chose a faire :
+# ===
+# Il faudrait pour finir choisir un nombre de parametre et les parametres en question
+# puis lancer une regression en fonction de tout cela sur notre ensemble de test
+# afin d'avoir une valeur finale de notre erreur et donc 
+# pouvoir evaluer notre modele en fonction des prochains modeles que nous allons construire
+
+# ==
+# Question pour le prof :
+# ===
+# pour pouvoir evaluer la performance de nos modeles et donc choiisir le meilleur modele de 
+# facon non biaisé, faudrait il des le debut mettre de cote le mme ensemble de test
+# et ensuite faire tourner a la fin tout nos modeles dessus ?
+
+
