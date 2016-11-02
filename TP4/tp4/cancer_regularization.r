@@ -50,6 +50,8 @@ for(i in 1:data.dim[2]){
 # ===
 # Nous ne pouvions pas le faire avant, car nous avons du centre reduire nos valeurs 
 # il faut donc le faire apres
+# A noter ici que nous allons utiliser la fonction cv.glmnet qui utilise deja
+# le CV 
 
 # Ajout de l'intercept a nos data
 # On a besoin d'utiliser cette fonction pour que ca marche avec glmnet
@@ -65,15 +67,27 @@ print(mean(label.cv-ridge.pred)^2)
 
 
 # ==== Lasso Regression ===
-#data.train <- model.matrix(label.train ~.,data.train)
-cv.out <- cv.glmnet(data.train, label.train, alpha = 1)
-plot(cv.out)
+cv.lasso.out <- cv.glmnet(data.train, label.train, alpha = 1)
+plot(cv.lasso.out)
 
-#data.cv <- model.matrix(label.cv~.,data.cv)
-
-fit.lasso <- glmnet(data.train, label.train, lambda = cv.out$lambda.min, alpha=0)
+fit.lasso <- glmnet(data.train, label.train, lambda = cv.lasso.out$lambda.min, alpha=0)
 ridge.pred <- predict(fit.lasso, s=cv.out$lambda.min,newx=data.cv)
 print(mean(label.cv-ridge.pred)^2)
+
+plot(cv.lasso.out$lambda, cv.lasso.out$cvm)
+
+# comme dans le cours, ce serait aussi simpa de pouvoir afficher l'evolution du R^2 en fonction du lambda
+# on va donc devoir le calculer
+label.train.mean = mean(label.train)
+tss = sum((label.cv-label.train.mean)^2)
+lasso.r2 <- rep(1,length(cv.lasso.out$lambda))
+diff <- cv.lasso.out$cvm / tss
+lasso.r2  <- lasso.r2 - diff
+
+plot(cv.lasso.out$lambda, lasso.r2)
+
+# == CHOSES A FAIRE ==
+# Utiliser aussi le package rda, histoire de tester la derniere solution possible
 
 # === Question PROF ===
 # Dans nos jeux de donnees on a des echelles tres differentes pour nos parametres
@@ -81,3 +95,12 @@ print(mean(label.cv-ridge.pred)^2)
 # Si oui, dans ce cas la comment le faire pour la regression de ridge, car
 # dans l'exemple du cours, on a rajouter l'intercept au debut 
 # or on ne doit pas scale l'intercept si ?
+
+# Est ce que le faire de cette facon pour le model.matrix revient bien au meme 
+# Pck j'ai l'impression que oui, et que ca ne rajoute juste qu'un intercept ..
+# mais je prefererai en etre sur
+
+# Avec la fonction cv.glmnet on fait deja au final notre CV
+# du coup je ne sais pas trop trop si je dois utiliser directement les 
+# datas de test ou si c'est mieux de faire avec les data.cvs
+# pck au final plus on a de datas pour notre modele, mieux c'est !

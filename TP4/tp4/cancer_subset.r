@@ -1,8 +1,7 @@
 # LOAD DATA
 library(corrplot)
 library(leaps)
-
-cancer = read.table("data/r_breast_cancer.data.txt",header=T,sep=",")
+source("cancer_dataSeparation.r")
 
 getFormulas <- function(col, order, label) {
   result <- vector(mode="character", length=length(order))
@@ -16,70 +15,25 @@ getFormulas <- function(col, order, label) {
   return(result)
 }
 
-getErrorCV <- function(K, formula, label, data, data.dim){
-  folds = sample(1:K,data.dim[1], replace=TRUE)
-  CV <- rep(0,data.dim[2])
-  for(i in (1:data.dim[2])){
-    for(k in (1:K)){
-      label.function.cv <- label[folds!=k]
-      print(label.function.cv)
-      print(dim(data[folds!=k,]))
-      reg <- lm(formula = formula[i],data=data[folds!=k,])
-      print("2")
-      pred <- predict(reg, newdata=data[folds==k,])
-      CV[i] <- CV[i] + sum((label[folds==k]-pred)^2)
-    }
-    CV[i]<-CV[i]/data.dim[1]
-  }
-  return(CV)
-}
-
-# ====
-# Separation des donnees cancer en data et label 
-# ====
-data <- cancer
-data$Time <- NULL
-label <- cancer$Time
-
-data.dim <- dim(data)
-
 # ====
 # Utilisation de la regression lineaire avec le modele de base
 # ====
-
-# 1 - Separation des donnees en test, app
-napp <- round(2/3*data.dim[1])
-indice <- sample(1:data.dim[1], napp)
-
-data.train <- data[indice,]
-data.test <- data[-indice,]
-
+# 1 - Recuperation des datas
+data.train <- getDataTrainScale()
 data.train.dim <- dim(data.train)
 
-label.train <- label[indice]
-label.test <- label[-indice]
+label.train <- getLabelTrain()
 
-# 2 - Seperation des data de train en train et cv 
-ncv <- round(1/3*napp)
+# 2 - Separation des data de train en train et cv 
+ncv <- round(1/3*data.train.dim[1])
 indice.cv <- sample(1:data.train.dim[1],ncv)
 
 data.cv <- data.train[indice.cv,]
 data.train <- data.train[-indice.cv,]
 
-# 2 - Centre reduire en fonction de notre apprentissage
-# Scaling donnees app
-data.train.sd <- apply(data.train, 2, sd)
-data.train.mean <- colMeans(data.train)
-data.train <- as.data.frame(scale(data.train))
-
 label.cv <- label.train[indice.cv]
 label.train <- label.train[-indice.cv]
-
-# Scaling donnees cv
-for(i in 1:data.dim[2]){
-  data.cv[,i]<-(data.cv[,i]-data.train.mean[i])/data.train.sd[i]
-}
-
+  
 # Forward stepwise selection
 reg.fit <- regsubsets(label.train~. , data=data.train, method='forward', nvmax=33)
 reg.order <- reg.fit$vorder
@@ -125,21 +79,15 @@ plot(num_pred,err, type="l")
 # On reprend donc notre jeu de datas de depart et on le divise juste en 2
 # On a garde en memoire les indices de nos jeux de donnees, afin 
 # d'utiliser exactement les memes ( napp, indice)
-data.train.cv <- data[indice,]
-data.test.cv <- data[-indice,]
-
+data.train.cv <- getDataTrainScale()
 data.train.dim.cv <- dim(data.train.cv)
-
-label.train.cv <- label[indice]
-label.test.cv <- label[-indice]
+label.train.cv <- getLabelTrain()
 
 formula.cv <- getFormulas(data.colnames, reg.order,"label.function.cv")
 
 # On prend generalement 5 ou 10 comme valeur de K 
 # C'est deux valeurs correspondant a un bon compromis biais-vairance
 # on va donc ici essayer avec les 2 differentes valeurs et observer nos resultats
-#CV_5 <- getErrorCV(5, formula.cv, label.train.cv, data.train.cv, data.train.dim.cv)
-#CV_10 <- getErrorCV(10, formula.cv, label.train.cv, data.train.cv, data.train.dim.cv)
 
 folds = sample(1:10,data.train.dim.cv[1], replace=TRUE)
 CV <- rep(0,data.train.dim.cv[2])
@@ -174,12 +122,5 @@ plot(num_pred,CV, type="l")
 # puis lancer une regression en fonction de tout cela sur notre ensemble de test
 # afin d'avoir une valeur finale de notre erreur et donc 
 # pouvoir evaluer notre modele en fonction des prochains modeles que nous allons construire
-
-# ==
-# Question pour le prof :
-# ===
-# pour pouvoir evaluer la performance de nos modeles et donc choiisir le meilleur modele de 
-# facon non biaisé, faudrait il des le debut mettre de cote le mme ensemble de test
-# et ensuite faire tourner a la fin tout nos modeles dessus ?
 
 
