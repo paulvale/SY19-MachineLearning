@@ -1,6 +1,5 @@
 # LOAD DATA
-install.packages("FNN")
-install.packages("hydroGOF")
+
 library(MASS)
 library(pROC)
 library(nnet)
@@ -57,6 +56,12 @@ y <- phoneme$speaker
 # Pour chacun de nos frames, on fait un log-periodogram, technique utilisé dans la reconnaissance vocale
 # et ce log-periodogram comprend 256 features
 # nos datas 
+# --------------------------------------------- SCALING DATAS ---------------------------------------------------------
+
+# Toutes les datas ont plus ou moins une variance et une une moyenne identique, nous centrons et reduisons quand meme 
+# pour etre sur de rendre ces variables comparables
+
+phoneme[,1:256] <- as.data.frame(scale(phoneme[,1:256]))
 
 
 # -------------------------------------------- DATA SEPARATION --------------------------------------------------------
@@ -116,56 +121,142 @@ phoneme.test.label <- phoneme.test[,258]
 #on doit ici predire une classe et non une valeur, on utilisera donc des methodes de classification et non de regression
 
 #  		--- LDA - 8.6% d erreur ---
+print("LDA - Error : ")
 phoneme.lda <- lda(phoneme.train.label~.,data=phoneme.train.data)
 phoneme.lda.pred <- predict(phoneme.lda, newdata=phoneme.test.data)
 phoneme.lda.perf <- table(phoneme.test.label,phoneme.lda.pred$class)
 phoneme.lda.error <- 1 - sum(diag(phoneme.lda.perf))/(nrow(phoneme.test))
+print(phoneme.lda.error)
 
 #		--- QDA - 18.93% d erreur ---
+print("QDA - Error : ")
 phoneme.qda <- qda(phoneme.train.label~.,data=phoneme.train.data)
 phoneme.qda.pred <- predict(phoneme.qda, newdata=phoneme.test.data)
 phoneme.qda.perf <- table(phoneme.test.label,phoneme.qda.pred$class)
 phoneme.qda.error <- 1 - sum(diag(phoneme.qda.perf))/(nrow(phoneme.test))
+print(phoneme.qda.error)
 
 
-# pourquoi pas faire une regression logistique en predisant les probabilité de la classe 1, 2, 3 ,4 et 5
-# meme chose nen regression lineaire
-# meme chose avec des kppv
-
-#		--- Regression lineaire ---
-#phoneme.glm <- glm(phoneme.train.label~.,data=phoneme.train.data, family=binomial)
-#phoneme.glm.pred <- predict(phoneme.glm,newdata=phoneme.test.data,type='response') #donne les prob predites
-#phoneme.glm.perf <- table(phoneme.test.label,phoneme.glm.pred>0.2)
-#phoneme.glm.err <- 1 - sum(diag(phoneme.glm.perf))/(nrow(phoneme.test))
-
-#ne marche pas car plusieurs classes (plus que 2)
-
-#phoneme.glm.aa <- f1(phoneme.train.label,'aa')
-#phoneme.glm.ao <- f1(phoneme.train.label,'ao')
-#phoneme.glm.dcl <- f1(phoneme.train.label,'dcl')
-#phoneme.glm.iy <- f1(phoneme.train.label,'iy')
-#phoneme.glm.sh <- f1(phoneme.train.label,'sh')
-#phoneme.glm.global <- matrix(c(phoneme.glm.aa, phoneme.glm.ao,phoneme.glm.dcl,phoneme.glm.iy,phoneme.glm.sh),ncol=5,byrow = F)
-#model1 <- multinom(phoneme.glm.global~.,data=phoneme.train.data)
-
-#ne marche pas non plus
-
-#		--- KPPV - 45% d'erreur---
-phoneme.kppv.error <- rep(0,30)
-for(k in 2:8)
+#		--- Regression logistique - 11.13% d'erreur ---
+print("Regression logistique - Error : ")
+phoneme.glmnet <- glmnet(as.matrix(phoneme.train.data),y=phoneme.train.label,family="multinomial")
+phoneme.glmnet.pred <- predict(phoneme.glmnet,newx=as.matrix(phoneme.test.data),type="response",s=phoneme.glmnet$lambda.min)
+# phoneme.glmnet.pred est un tableau 3 dimensions :
+#	- La premiere est sur nos obsvervations (1500 dans l'ensemble de test)
+#	- La deuxieme est sur nos types de phonemes (5types de phonemes)
+#	- La troisieme est sur l'iteration
+phoneme.glmnet.res<-c(rep(0,1500))
+for (i in 1:1500)
 {
-    phoneme.kppv.pred <- kppv(phoneme.train.data, phoneme.train.label,k,phoneme.test.data)
-    phoneme.kppv.perf <- table(phoneme.test.label,phoneme.kppv.pred)
-	phoneme.kppv.error[k] <- 1 - sum(diag(phoneme.kppv.perf))/(nrow(phoneme.test))
+	class <- ""
+	res<-which.max(phoneme.glmnet.pred[i,1:5,100])
+	{
+		if(res==1)
+		{
+			class <- "aa"
+		}
+		else if(res==2){
+			class <- "ao"
+		}
+		else if(res==3){
+			class <- "dcl"
+		}
+		else if(res==4){
+			class <- "iy"
+		}
+		else{
+			class <- "sh"
+		}
+	}
+	phoneme.glmnet.res[i] <- class 
 }
-#Les kppv nous donne un taux d'erreur compris entre 45% et 59%, avec un k optimal à 3
+phoneme.glmnet.perf <- table(phoneme.test.label,phoneme.glmnet.res)
+phoneme.glmnet.error <- 1 - sum(diag(phoneme.glmnet.perf))/(nrow(phoneme.test))
+print(phoneme.glmnet.error)
+
+#		--- KPPV - 9.27% d'erreur - koptimal 8 ---
+print("KNN - Errors : ")
+phoneme.knn.error<-rep(0,20)
+for(k in 8:8)
+{
+	phoneme.knn <- knn(phoneme.train.data, phoneme.test.data, phoneme.train.label,k=k)
+	phoneme.knn.error[k] <- (length(which(FALSE==(phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
+
+}
+print(phoneme.knn.error)
+
+#regarder si toutes les varibles sont importants (regarder la correlation des variables)
+#regularisation : regarder si rajouter un terme on a pas un meilleur modele (regarder la correlation des variables)
+#facteur analysis : changemet de repere 
+#faire un ACP pour peut etre reduire
 
 
+# ------------------------------------------------ SUBSET SELECTION -------------------------------------------------
+reg.fit<- regsubsets(phoneme.train.label~.,data=phoneme.train.data,method='forward',nvmax=256)
+summary.regsubsets <- summary(reg.fit)
+summary.regsubsets.which<-summary.regsubsets$which #permet de savoir quels variables sont dans quels modeles. (il faut decaler de 2)
+LDA_ERROR <- 0
+QDA_ERROR <- 0
+KNN_ERROR <- 0
+lda.min <- 100
+qda.min <- 100
+knn.min <- 100
+lda.subset <- summary.regsubsets.which[2,3:258]
+qda.subset <- summary.regsubsets.which[2,3:258]
+knn.subset <- summary.regsubsets.which[2,3:258]
+k.opt <- 0
+for(i in 2:255)#ca sert a rien de le faire jusqu'a 256 on a deja les resualtas plus haut.
+{
+	# selection des nouveaux jeux de données selon le nombre de variables gardés.
+	new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[i,3:258]]
+	new.phoneme.train.data<-as.data.frame(new.phoneme.train.data)
+	new.phoneme.test.data<-phoneme.test.data[,summary.regsubsets.which[i,3:258]]
+	new.phoneme.test.data<-as.data.frame(new.phoneme.test.data)
 
+	#calcul des nouveaux taux d'erreur de chaque modele
 
+	#  		--- LDA - 7.93% d erreur - 2 variables gardées ---
+	new.phoneme.lda <- lda(phoneme.train.label~.,data=new.phoneme.train.data)
+	new.phoneme.lda.pred <- predict(new.phoneme.lda, newdata=new.phoneme.test.data)
+	new.phoneme.lda.perf <- table(phoneme.test.label,new.phoneme.lda.pred$class)
+	LDA_ERROR <- 1 - sum(diag(new.phoneme.lda.perf))/(nrow(phoneme.test))
+	if(LDA_ERROR<lda.min)
+	{
+		lda.min <- LDA_ERROR
+		lda.subset <- summary.regsubsets.which[i,3:258]
+	}
 
+	#		--- QDA - 7.4% d erreur - 37 variables gardées ---
+	new.phoneme.qda <- qda(phoneme.train.label~.,data=new.phoneme.train.data)
+	new.phoneme.qda.pred <- predict(new.phoneme.qda, newdata=new.phoneme.test.data)
+	new.phoneme.qda.perf <- table(phoneme.test.label,new.phoneme.qda.pred$class)
+	QDA_ERROR <- 1 - sum(diag(new.phoneme.qda.perf))/(nrow(phoneme.test))
+	if(QDA_ERROR<qda.min)
+	{
+		qda.min <- QDA_ERROR
+		qda.subset <- summary.regsubsets.which[i,3:258]
+	}
 
+	#		--- KNN - 7.67% d erreur - k optimal 8 - 41 variables gardées ---
+	phoneme.knn.error<-rep(0,10)
+	for(k in 3:10)
+	{
+		new.phoneme.knn <- knn(new.phoneme.train.data, new.phoneme.test.data, phoneme.train.label,k=k)
+		KNN_ERROR <- (length(which(FALSE==(new.phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
+		if(KNN_ERROR<knn.min)
+		{
+			knn.min <- KNN_ERROR
+			knn.subset <- summary.regsubsets.which[i,3:258]
+			k.opt <- k
+		}
+	}
+	
+}
+print(lda.min)
+print(qda.min)
 
+# ------------------------------------------------ INTERPRETATION -------------------------------------------------
 
+# Les phonemes aa et ao sont tres ressemblants, la plupart des errerus de classification concernent ces deux phonemes.
 
 
