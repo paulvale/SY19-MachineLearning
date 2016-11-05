@@ -3,6 +3,8 @@
 library(MASS)
 library(pROC)
 library(nnet)
+library(glmnet)
+library(leaps)
 library("FNN", character.only = TRUE)
 library("hydroGOF", character.only = TRUE)
 phoneme = read.table("data/phoneme.data.txt",header=T,sep=",")
@@ -61,7 +63,7 @@ y <- phoneme$speaker
 # Toutes les datas ont plus ou moins une variance et une une moyenne identique, nous centrons et reduisons quand meme 
 # pour etre sur de rendre ces variables comparables
 
-phoneme[,1:256] <- as.data.frame(scale(phoneme[,1:256]))
+phoneme[,2:257] <- as.data.frame(scale(phoneme[,2:257]))
 
 
 # -------------------------------------------- DATA SEPARATION --------------------------------------------------------
@@ -109,10 +111,10 @@ iy.test <- rbind(iy[757:812,],iy[833:1163,])
 
 #		--- assemblage de tous les dataframes ---
 phoneme.train <- rbind(aa.train, sh.train, ao.train, dcl.train, iy.train)
-phoneme.train.data <- phoneme.train[,1:257]
+phoneme.train.data <- phoneme.train[,2:257]
 phoneme.train.label <- phoneme.train$g
 phoneme.test <- rbind(aa.test, sh.test, ao.test, dcl.test, iy.test)
-phoneme.test.data <- phoneme.test[,1:257]
+phoneme.test.data <- phoneme.test[,2:257]
 phoneme.test.label <- phoneme.test[,258]
 
 
@@ -195,65 +197,92 @@ print(phoneme.knn.error)
 reg.fit<- regsubsets(phoneme.train.label~.,data=phoneme.train.data,method='forward',nvmax=256)
 summary.regsubsets <- summary(reg.fit)
 summary.regsubsets.which<-summary.regsubsets$which #permet de savoir quels variables sont dans quels modeles. (il faut decaler de 2)
-LDA_ERROR <- 0
-QDA_ERROR <- 0
-KNN_ERROR <- 0
+LDA_ERROR <- matrix(0,ncol=2,nrow=250)
+QDA_ERROR <- matrix(0,ncol=2,nrow=250)
+KNN_ERROR <- matrix(0,ncol=2,nrow=250)
 lda.min <- 100
 qda.min <- 100
 knn.min <- 100
-lda.subset <- summary.regsubsets.which[2,3:258]
-qda.subset <- summary.regsubsets.which[2,3:258]
-knn.subset <- summary.regsubsets.which[2,3:258]
+lda.subset <- summary.regsubsets.which[2,3:257]
+qda.subset <- summary.regsubsets.which[2,3:257]
+knn.subset <- summary.regsubsets.which[2,3:257]
 k.opt <- 0
-for(i in 2:255)#ca sert a rien de le faire jusqu'a 256 on a deja les resualtas plus haut.
+for(i in 2:250)#ca sert a rien de le faire jusqu'a 256 on a deja les resualtas plus haut.
 {
 	# selection des nouveaux jeux de données selon le nombre de variables gardés.
-	new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[i,3:258]]
+	new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[i,3:257]]
 	new.phoneme.train.data<-as.data.frame(new.phoneme.train.data)
-	new.phoneme.test.data<-phoneme.test.data[,summary.regsubsets.which[i,3:258]]
+	new.phoneme.test.data<-phoneme.test.data[,summary.regsubsets.which[i,3:257]]
 	new.phoneme.test.data<-as.data.frame(new.phoneme.test.data)
 
 	#calcul des nouveaux taux d'erreur de chaque modele
 
-	#  		--- LDA - 7.93% d erreur - 2 variables gardées ---
+	#  		--- LDA - 7.87% d erreur - 132 variables gardées ---
 	new.phoneme.lda <- lda(phoneme.train.label~.,data=new.phoneme.train.data)
 	new.phoneme.lda.pred <- predict(new.phoneme.lda, newdata=new.phoneme.test.data)
 	new.phoneme.lda.perf <- table(phoneme.test.label,new.phoneme.lda.pred$class)
-	LDA_ERROR <- 1 - sum(diag(new.phoneme.lda.perf))/(nrow(phoneme.test))
-	if(LDA_ERROR<lda.min)
+	LDA_ERROR[i,2] <- 1 - sum(diag(new.phoneme.lda.perf))/(nrow(phoneme.test))
+	LDA_ERROR[i,1] <- i
+	if(LDA_ERROR[i,2]<lda.min)
 	{
-		lda.min <- LDA_ERROR
-		lda.subset <- summary.regsubsets.which[i,3:258]
+		lda.min <- LDA_ERROR[i,2]
+		lda.subset <- summary.regsubsets.which[i,3:257]
 	}
 
-	#		--- QDA - 7.4% d erreur - 37 variables gardées ---
+	#		--- QDA - 7.8% d erreur - 37 variables gardées ---
 	new.phoneme.qda <- qda(phoneme.train.label~.,data=new.phoneme.train.data)
 	new.phoneme.qda.pred <- predict(new.phoneme.qda, newdata=new.phoneme.test.data)
 	new.phoneme.qda.perf <- table(phoneme.test.label,new.phoneme.qda.pred$class)
-	QDA_ERROR <- 1 - sum(diag(new.phoneme.qda.perf))/(nrow(phoneme.test))
-	if(QDA_ERROR<qda.min)
+	QDA_ERROR[i,2] <- 1 - sum(diag(new.phoneme.qda.perf))/(nrow(phoneme.test))
+	QDA_ERROR[i,1] <- i
+	if(QDA_ERROR[i,2]<qda.min)
 	{
-		qda.min <- QDA_ERROR
-		qda.subset <- summary.regsubsets.which[i,3:258]
+		qda.min <- QDA_ERROR[i,2]
+		qda.subset <- summary.regsubsets.which[i,3:257]
 	}
 
-	#		--- KNN - 7.67% d erreur - k optimal 8 - 41 variables gardées ---
-	phoneme.knn.error<-rep(0,10)
-	for(k in 3:10)
+	#		--- KNN - 7.87% d erreur - k optimal 8 - 48 variables gardées ---
+	for(k in 8:8)
 	{
 		new.phoneme.knn <- knn(new.phoneme.train.data, new.phoneme.test.data, phoneme.train.label,k=k)
-		KNN_ERROR <- (length(which(FALSE==(new.phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
-		if(KNN_ERROR<knn.min)
+		KNN_ERROR[i,2] <- (length(which(FALSE==(new.phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
+		KNN_ERROR[i,1] <- i
+		if(KNN_ERROR[i,2]<knn.min)
 		{
-			knn.min <- KNN_ERROR
-			knn.subset <- summary.regsubsets.which[i,3:258]
+			knn.min <- KNN_ERROR[i,2]
+			knn.subset <- summary.regsubsets.which[i,3:257]
 			k.opt <- k
 		}
 	}
 	
 }
+print("Apres subset selection : ")
+print("LDA error minimale : ")
 print(lda.min)
+print("QDA error minimale : ")
 print(qda.min)
+print("KNN error minimale : ")
+print(knn.min)
+
+# On peut deduire de ce modele qu'une selection de variable reduit notre erreur moyenne de nos modele.
+# Pour l analyse discriminnate lineaire  l erreur descend a 7.93% lorsqu'on garde seulement 2 variables
+# Pour l analyse discriminante quadratique l erreur descend a 7.4% lorsqu on garde 37 variables
+# Pour les KNN l erreur descend a 7.67% lorsqu'on garde 41 variables avec un k optimnal qui reste a 8
+
+# ------------------------------------------------ REGRESSION RIDGE & LASSO -------------------------------------------------
+
+# Permet de estimer un modele avec des variables fortement correlees
+# Avantage de la regression ridge : les variables explicatrices tres correlees se combinent pour se renforcer mutuellement
+# Cette methode garde toutes les variables mais aucun moyen de savoir lesquelles ont plus de poids que d'autres
+
+# La methode LASSO met a 0 les variables peu explicatives
+# Si les variables sont correlees, l'algorithme en choisi une et la met a 0
+# ------------------------------------------------ ANALYSE EN COMPOSANTE PRINCIPALE -------------------------------------------------
+
+# Nous avons effectué une analyse en composante principale 
+# l'idee serait de creer un nouvel axe factoriel et de creer un modele a partir de la
+
+# Lorsqu'on regarde nos vecteurs propres, on remarque qu on peut en garder 2 ou 3 pour expliquer nos 257 variables de maniere efficace
 
 # ------------------------------------------------ INTERPRETATION -------------------------------------------------
 
