@@ -21,25 +21,25 @@ label.train <- getLabelTrain()
 
 # Ajout de l'intercept a nos data
 # On a besoin d'utiliser cette fonction pour que ca marche avec glmnet
-data.train <- model.matrix(label.train ~.,data.train)
-cv.out <- cv.glmnet(data.train, label.train, alpha = 0)
+data.regression.train <- model.matrix(label.train ~.,data.train)
+cv.out <- cv.glmnet(data.regression.train, label.train, alpha = 0)
 plot(cv.out)
 
 # ==== Lasso Regression ===
-cv.lasso.out <- cv.glmnet(data.train, label.train, alpha = 1)
+cv.lasso.out <- cv.glmnet(data.regression.train, label.train, alpha = 1)
 plot(cv.lasso.out)
 
-#plot(cv.lasso.out$lambda, cv.lasso.out$cvm)
+# ==== Elastic Net ===
+valueOfLambda <- seq(0,1,by=0.1)
+cvmFromLambda <- rep(0, length(valueOfLambda))
 
-# comme dans le cours, ce serait aussi simpa de pouvoir afficher l'evolution du R^2 en fonction du lambda
-# on va donc devoir le calculer
-#label.train.mean = mean(label.train)
-#tss = sum((label.cv-label.train.mean)^2)
-#lasso.r2 <- rep(1,length(cv.lasso.out$lambda))
-#diff <- cv.lasso.out$cvm / tss
-#lasso.r2  <- lasso.r2 - diff
+for(i in 1:length(valueOfLambda)){
+  cv.elastic.out <- cv.glmnet(data.regression.train, label.train, alpha = valueOfLambda[i])  
+  cvmFromLambda[i]<-min(cv.elastic.out$cvm)
+}
 
-#plot(cv.lasso.out$lambda, lasso.r2)
-
-# == CHOSES A FAIRE ==
-# Utiliser aussi le package rda, histoire de tester la derniere solution possible
+plot(valueOfLambda, cvmFromLambda)
+# valueOfLambda[which.min(cvmFromLambda)]
+# histoire de prendre le minimum de la value de lambda qui nous interesse
+print(valueOfLambda[which.min(cvmFromLambda)])
+print(min(cvmFromLambda))
