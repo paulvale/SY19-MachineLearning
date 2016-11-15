@@ -1,7 +1,7 @@
 # LOAD DATA
 library(corrplot)
 library(leaps)
-source("cancer_dataSeparation.r")
+source("cancer/cancer_dataSeparation.r")
 
 getFormulas <- function(col, order, label) {
   result <- vector(mode="character", length=length(order))

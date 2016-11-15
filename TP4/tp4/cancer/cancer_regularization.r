@@ -1,5 +1,5 @@
 library(glmnet)
-source("cancer_dataSeparation.r")
+source("cancer/cancer_dataSeparation.r")
 
 # ====
 # Utilisation de la regression lineaire avec le modele de base
