@@ -16,7 +16,7 @@ getFormulas <- function(col, order, label) {
 }
 
 # ====
-# Utilisation de la regression lineaire avec le modele de base
+# Choix des meilleurs subsets
 # ====
 # 1 - Recuperation des datas
 data.train <- getDataTrainScale()
@@ -41,7 +41,7 @@ reg.order <- reg.order - 1
 reg.order <- reg.order[2:length(reg.order)]
 data.colnames <- colnames(data.train)
 plot(reg.fit, scale="r2")
-
+#readline(prompt="Press [enter] to continue")
 Formula <- getFormulas(data.colnames, reg.order, "label.train")
 num_pred <- c(1:length(reg.order))
 err <- c(1:length(reg.order))
@@ -53,7 +53,7 @@ for(i in 1:(length(reg.order))){
 }
 
 plot(num_pred,err, type="l")
-
+#readline(prompt="Press [enter] to continue")
 # === Observation ===
 # Comme on a pu le voir dans le cours, 
 # au final, on a ici une variance qui est tout de meme assez importante sur nos courbes,
@@ -91,6 +91,7 @@ formula.cv <- getFormulas(data.colnames, reg.order,"label.function.cv")
 
 folds = sample(1:10,data.train.dim.cv[1], replace=TRUE)
 CV <- rep(0,data.train.dim.cv[2])
+CV2 <- rep(0,data.train.dim.cv[2])
 for(i in (1:data.train.dim.cv[2])){
   for(k in (1:10)){
     label.function.cv <- label.train.cv[folds!=k]
@@ -102,6 +103,8 @@ for(i in (1:data.train.dim.cv[2])){
 }
 
 plot(num_pred,CV, type="l")
+print(num_pred[which.min(CV)])
+print(min(CV))
 
 # === Observation ===
 # Comme on pouvait l'esperer, notre variance entre nos courbes a bien diminue
