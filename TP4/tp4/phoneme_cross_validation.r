@@ -4,7 +4,7 @@ phoneme = read.table("data/phoneme.data.txt",header=T,sep=",")
 
 
 phoneme[,1:256] <- as.data.frame(scale(phoneme[,1:256]))
-
+ 
 # -------------------------------------------- DATA SEPARATION --------------------------------------------------------
 
 #	Nous utiliserons ici le prinicipe de cross validation :

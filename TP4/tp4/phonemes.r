@@ -207,7 +207,7 @@ lda.subset <- summary.regsubsets.which[2,3:257]
 qda.subset <- summary.regsubsets.which[2,3:257]
 knn.subset <- summary.regsubsets.which[2,3:257]
 k.opt <- 0
-for(i in 2:250)#ca sert a rien de le faire jusqu'a 256 on a deja les resualtas plus haut.
+for(i in 2:250)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
 {
 	# selection des nouveaux jeux de données selon le nombre de variables gardés.
 	new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[i,3:257]]
@@ -265,9 +265,9 @@ print("KNN error minimale : ")
 print(knn.min)
 
 # On peut deduire de ce modele qu'une selection de variable reduit notre erreur moyenne de nos modele.
-# Pour l analyse discriminnate lineaire  l erreur descend a 7.93% lorsqu'on garde seulement 2 variables
+# Pour l analyse discriminnate lineaire  l erreur descend a 7.87% lorsqu'on garde 132 variables
 # Pour l analyse discriminante quadratique l erreur descend a 7.4% lorsqu on garde 37 variables
-# Pour les KNN l erreur descend a 7.67% lorsqu'on garde 41 variables avec un k optimnal qui reste a 8
+# Pour les KNN l erreur descend a 7.87% lorsqu'on garde 48 variables avec un k optimnal qui reste a 8
 
 # ------------------------------------------------ REGRESSION RIDGE & LASSO -------------------------------------------------
 
@@ -281,8 +281,20 @@ print(knn.min)
 
 # Nous avons effectué une analyse en composante principale 
 # l'idee serait de creer un nouvel axe factoriel et de creer un modele a partir de la
-
+phoneme.acp <- princomp(phoneme.train.data)
 # Lorsqu'on regarde nos vecteurs propres, on remarque qu on peut en garder 2 ou 3 pour expliquer nos 257 variables de maniere efficace
+plot(phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],1:2], col=c('red','green','yellow','black','blue')[phoneme.train.label])
+# Les aa(red) les sh(green) et les dcl(black) se ressemblent beaucoup avec une acp avec le premier et deuxieme axe factoriel
+plot(phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],2:3], col=c('red','green','yellow','black','blue')[phoneme.train.label])
+# Les dcl se démarquent tres bien des aa et des sh avec le deuxieme et le troisieme axe factoriel
+plot(phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],1],phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],3], col=c('red','green','yellow','black','blue')[phoneme.train.label])
+# L utilisation des la derniere combinaison d'axes factoriels ne sufit pas à séparer aa et sh qui restent tres corrélés.
+
+# On peut donc déduire de cette analyse 2 choses 
+#	- Nos deux phonemes a et sh sont tres ressemblant et n'arrivent pas a se dissocier sur les axes factoriels
+#	- Il serait interessant de recreer des modeles en utilisant les premiers et troisieme axes factoriels qui séparent bien nos variables (sauf aa et sh)
+
+
 
 # ------------------------------------------------ INTERPRETATION -------------------------------------------------
 
