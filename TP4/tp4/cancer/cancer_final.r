@@ -4,6 +4,8 @@ rm(list = ls())
 # LOAD DATA
 library(corrplot)
 library(leaps)
+library(glmnet)
+library(pls)
 source("cancer/cancer_dataSeparation.r")
 
 getFormulas <- function(col, order, label) {
@@ -22,7 +24,6 @@ getFormulas <- function(col, order, label) {
 # ======== CHOIX DU MODELE =====
 # ==============================
 
-
 # 1 - Recuperation des datas
 data.train <- getDataTrainScale()
 data.train.dim <- dim(data.train)
@@ -36,7 +37,7 @@ reg.order <- reg.order - 1
 reg.order <- reg.order[2:length(reg.order)]
 data.colnames <- colnames(data.train)
 plot(reg.fit, scale="r2")
-#readline(prompt="Press [enter] to continue")
+readline(prompt="Press [enter] to continue")
 Formula <- getFormulas(data.colnames, reg.order, "label.cv")
 
 # On prend generalement 5 ou 10 comme valeur de K 
@@ -79,6 +80,12 @@ for(i in (1:data.train.dim[2])){
   }
   #readline(prompt="Press [enter] to continue")
 }
+
+# Dernier modele : PCR (Principal Component regression)
+model.pcr <- pcr(label.train~.,data=data.train, validation="CV")
+validMSEP = MSEP(model.pcr)
+
+
 # VISUALISATION
 num_pred <- c(1:length(reg.order))
 
@@ -95,6 +102,10 @@ for(lambda in 1:length(valueOfLambda)){
   #print(min(error.elasticNet[,lambda]))
   #readline(prompt="Press [enter] to continue")
 }
+
+# PCR
+validationplot(model.pcr, val.type = "MSEP", legendpos = "topright")
+
 
 # ====================================
 # ======== TEST DU MODELE FINALE =====
@@ -115,13 +126,15 @@ label.test <- getLabelTest()
 # 2 - Calcule du modele et de ses performances
 print(min(error.linear))
 print(min(error.elasticNet))
+print(min(validMSEP$val["CV",,]))
 
-
-if( min(error.elasticNet) < min(error.linear)){
+if( (min(error.elasticNet) < min(error.linear)) && (min(error.elasticNet) < min(validMSEP$val["adjCV",,]))){
   print("elastic")
   indexes = which(error.elasticNet == min(error.elasticNet), arr.ind = TRUE)
   numberOfParameters = indexes[1]
   alpha = valueOfLambda[indexes[2]]
+  print(numberOfParameters)
+  print(alpha)
   
   # Fabrication de la matrix train et test
   data.regression <- as.matrix(data.train[,which(reg.order == 1),])
@@ -148,7 +161,7 @@ if( min(error.elasticNet) < min(error.linear)){
   fit <- glmnet(data.regression.train, label.train, lambda=cv.out$lambda.min, alpha = alpha)
   pred <- predict(fit, s=cv.out$lambda.min, newx=data.test)
   error <- mean((label.test-pred)^2)
-} else {
+} else if ((min(error.linear) < min(error.elasticNet)) && (min(error.linear) < min(validMSEP$val["CV",,]))) {
   print("linear")
   print(which.min(error.linear))
   numberOfParameters <- which.min(error.linear)
@@ -157,6 +170,14 @@ if( min(error.elasticNet) < min(error.linear)){
   reg <- lm(formula = FormulaTest[numberOfParameters],data=data.train)
   pred <- predict(reg, newdata=data.test)
   error <- mean((label.test-pred)^2)
+} else {
+  print("pcr")
+  print(which.min(validMSEP$val["CV",,]))
+  model.pcr <- pcr(label.train~., data=data.train, ncomp=which.min(validMSEP$val["CV",,]))
+  summary(fit.pcr)
+  
+  pred.pcr <- predict(model.pcr, newdata=data.test)
+  print(mean((pred.pcr - label.test)^2))
 }
 
 print(error)
