@@ -17,4 +17,5 @@ phoneme[,1:256] <- as.data.frame(scale(phoneme[,1:256]))
 #	Sur ces 10 sections nous choisissons tour à tour 1 section qui representera 
 #	notre ensemble de test. Nous allons donc effectuer la construction de notre modele 10 fois
 #	et ensuite choisir celui qui aura les meilleures performances
-#	Cette méthode nous permet de nous afrfanchir des 
+#	Cette méthode nous permet de nous afrfanchir des risques de divergence de modele selon la prise aleatoire d un 
+#	ensemble de test et d apprentissage.

@@ -277,11 +277,15 @@ print(knn.min)
 
 # La methode LASSO met a 0 les variables peu explicatives
 # Si les variables sont correlees, l'algorithme en choisi une et la met a 0
+
 # ------------------------------------------------ ANALYSE EN COMPOSANTE PRINCIPALE -------------------------------------------------
 
 # Nous avons effectué une analyse en composante principale 
 # l'idee serait de creer un nouvel axe factoriel et de creer un modele a partir de la
 phoneme.acp <- princomp(phoneme.train.data)
+phoneme.acp.train.scores <- as.data.frame(phoneme.acp$scores)
+phoneme.acp.test <- princomp(phoneme.test.data)
+phoneme.acp.test.scores <- as.data.frame(phoneme.acp.test$scores)
 # Lorsqu'on regarde nos vecteurs propres, on remarque qu on peut en garder 2 ou 3 pour expliquer nos 257 variables de maniere efficace
 plot(phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],1:2], col=c('red','green','yellow','black','blue')[phoneme.train.label])
 # Les aa(red) les sh(green) et les dcl(black) se ressemblent beaucoup avec une acp avec le premier et deuxieme axe factoriel
@@ -290,12 +294,236 @@ plot(phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],2:3], col=c('red','green','
 plot(phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],1],phoneme.acp$scores[1:dim(phoneme.acp$scores)[1],3], col=c('red','green','yellow','black','blue')[phoneme.train.label])
 # L utilisation des la derniere combinaison d'axes factoriels ne sufit pas à séparer aa et sh qui restent tres corrélés.
 
+
+#  		--- LDA - 13% d erreur ---
+phoneme.acp.lda <- lda(phoneme.train.label~.,data=phoneme.acp.train.scores[,1:5])
+phoneme.acp.lda.pred <- predict(phoneme.acp.lda, newdata=phoneme.acp.test.scores[,1:5])
+phoneme.acp.lda.perf <- table(phoneme.test.label,phoneme.acp.lda.pred$class)
+phoneme.acp.lda.error <- 1 - sum(diag(phoneme.acp.lda.perf))/(nrow(phoneme.test))
+print(phoneme.acp.lda.error)
+
+#		--- QDA - 10.87% d erreur ---
+phoneme.acp.qda <- qda(phoneme.train.label~.,data=phoneme.acp.train.scores[,1:5])
+phoneme.acp.qda.pred <- predict(phoneme.acp.qda, newdata=phoneme.acp.test.scores[,1:5])
+phoneme.acp.qda.perf <- table(phoneme.test.label,phoneme.acp.qda.pred$class)
+phoneme.acp.qda.error <- 1 - sum(diag(phoneme.acp.qda.perf))/(nrow(phoneme.test))
+print(phoneme.acp.qda.error)
+
+#		--- Regression logistique - 11.07% d'erreur ---
+phoneme.acp.glmnet <- glmnet(as.matrix(phoneme.acp.train.scores[,1:5]),y=phoneme.train.label,family="multinomial")
+phoneme.acp.glmnet.pred <- predict(phoneme.acp.glmnet,newx=as.matrix(phoneme.acp.test.scores[,1:5]),type="response",s=phoneme.acp.glmnet$lambda.min)
+# phoneme.glmnet.pred est un tableau 3 dimensions :
+#	- La premiere est sur nos obsvervations (1500 dans l'ensemble de test)
+#	- La deuxieme est sur nos types de phonemes (5types de phonemes)
+#	- La troisieme est sur l'iteration
+phoneme.acp.glmnet.res<-c(rep(0,1500))
+for (i in 1:1500)
+{
+	class <- ""
+	res<-which.max(phoneme.acp.glmnet.pred[i,1:5,100])
+	{
+		if(res==1)
+		{
+			class <- "aa"
+		}
+		else if(res==2){
+			class <- "ao"
+		}
+		else if(res==3){
+			class <- "dcl"
+		}
+		else if(res==4){
+			class <- "iy"
+		}
+		else{
+			class <- "sh"
+		}
+	}
+	phoneme.acp.glmnet.res[i] <- class 
+}
+phoneme.acp.glmnet.perf <- table(phoneme.test.label,phoneme.acp.glmnet.res)
+phoneme.acp.glmnet.error <- 1 - sum(diag(phoneme.acp.glmnet.perf))/(nrow(phoneme.test))
+print(phoneme.acp.glmnet.error)
+
+#		--- KPPV - 11.2% d'erreur - koptimal 8 ---
+phoneme.acp.knn.error<-rep(0,20)
+for(k in 1:10)
+{
+	phoneme.acp.knn <- knn(phoneme.acp.train.scores[,1:5], phoneme.acp.test.scores[,1:5], phoneme.train.label,k=k)
+	phoneme.acp.knn.error[k] <- (length(which(FALSE==(phoneme.acp.knn==phoneme.test.label))))/length(phoneme.test.label)
+
+}
+print(phoneme.acp.knn.error)
 # On peut donc déduire de cette analyse 2 choses 
 #	- Nos deux phonemes a et sh sont tres ressemblant et n'arrivent pas a se dissocier sur les axes factoriels
 #	- Il serait interessant de recreer des modeles en utilisant les premiers et troisieme axes factoriels qui séparent bien nos variables (sauf aa et sh)
 
 
+# ------------------------------------------------ FDA -------------------------------------------------
 
+
+phoneme.fda.lda<-lda(phoneme.train.label~. ,data=phoneme.train.data)
+U <- phoneme.fda.lda$scaling
+X <- as.matrix(phoneme.train.data)
+Z <- X%*%U
+
+phoneme.fda.lda.test<-lda(phoneme.test.label~. ,data=phoneme.test.data)
+Utest <- phoneme.fda.lda.test$scaling
+Xtest <- as.matrix(phoneme.test.data)
+Ztest <- Xtest%*%Utest
+
+cp1 <- 1
+cp2 <- 2
+
+plot(Z[phoneme.train.label=="aa",cp1],Z[phoneme.train.label=="aa",cp2],xlim=range(Z[,1]),ylim=range(Z[,2]),xlab="Z1",ylab="Z2")
+points(Z[phoneme.train.label=="ao",cp1],Z[phoneme.train.label=="ao",cp2],pch=2,col="blue")
+points(Z[phoneme.train.label=="dcl",cp1],Z[phoneme.train.label=="dcl",cp2],pch=3,col="red")
+points(Z[phoneme.train.label=="iy",cp1],Z[phoneme.train.label=="iy",cp2],pch=4,col="pink")
+points(Z[phoneme.train.label=="sh",cp1],Z[phoneme.train.label=="sh",cp2],pch=5,col="yellow")
+legend("topleft", inset=.05, title="Phoneme", c("aa", "ao", "dcl","iy","sh"), fill=c("black","blue","red","pink","yellow"), horiz=TRUE)
+
+#  		--- LDA - 5.47% d erreur ---
+phoneme.fda.lda <- lda(phoneme.train.label~.,data=as.data.frame(Z))
+phoneme.fda.lda.pred <- predict(phoneme.fda.lda, newdata=as.data.frame(Ztest))
+phoneme.fda.lda.perf <- table(phoneme.test.label,phoneme.fda.lda.pred$class)
+phoneme.fda.lda.error <- 1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test))
+print(phoneme.fda.lda.error)
+
+#		--- QDA - 5.67% d erreur ---
+phoneme.fda.qda <- qda(phoneme.train.label~.,data=as.data.frame(Z))
+phoneme.fda.qda.pred <- predict(phoneme.fda.qda, newdata=as.data.frame(Ztest))
+phoneme.fda.qda.perf <- table(phoneme.test.label,phoneme.fda.qda.pred$class)
+phoneme.fda.qda.error <- 1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test))
+print(phoneme.fda.qda.error)
+
+#		--- Regression logistique - 5.27% d'erreur ---
+phoneme.fda.glmnet <- glmnet(as.matrix(Z),y=phoneme.train.label,family="multinomial")
+phoneme.fda.glmnet.pred <- predict(phoneme.fda.glmnet,newx=as.matrix(Ztest),type="response",s=phoneme.fda.glmnet$lambda.min)
+# phoneme.glmnet.pred est un tableau 3 dimensions :
+#	- La premiere est sur nos obsvervations (1500 dans l'ensemble de test)
+#	- La deuxieme est sur nos types de phonemes (5types de phonemes)
+#	- La troisieme est sur l'iteration
+phoneme.fda.glmnet.res<-c(rep(0,1500))
+for (i in 1:1500)
+{
+	class <- ""
+	res<-which.max(phoneme.fda.glmnet.pred[i,1:5,100])
+	{
+		if(res==1)
+		{
+			class <- "aa"
+		}
+		else if(res==2){
+			class <- "ao"
+		}
+		else if(res==3){
+			class <- "dcl"
+		}
+		else if(res==4){
+			class <- "iy"
+		}
+		else{
+			class <- "sh"
+		}
+	}
+	phoneme.fda.glmnet.res[i] <- class 
+}
+phoneme.fda.glmnet.perf <- table(phoneme.test.label,phoneme.fda.glmnet.res)
+phoneme.fda.glmnet.error <- 1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test))
+print(phoneme.fda.glmnet.error)
+
+#		--- KPPV - 5% d'erreur - koptimal 7 ---
+phoneme.fda.knn.error<-rep(0,20)
+for(k in 1:10)
+{
+	phoneme.fda.knn <- knn(as.data.frame(Z), as.data.frame(Ztest), phoneme.train.label,k=k)
+	phoneme.fda.knn.error[k] <- (length(which(FALSE==(phoneme.fda.knn==phoneme.test.label))))/length(phoneme.test.label)
+
+}
+print(phoneme.fda.knn.error)
+
+# ------------------------------------------------ FDA + ACP -------------------------------------------------
+
+
+phoneme.fda.lda<-lda(phoneme.train.label~. ,data=as.data.frame(phoneme.acp.train.scores[,1:5]))
+U <- phoneme.fda.lda$scaling
+X <- as.matrix(phoneme.acp.train.scores[,1:5])
+Z <- X%*%U
+
+phoneme.fda.lda.test<-lda(phoneme.test.label~. ,data=phoneme.acp.test.scores[,1:5])
+Utest <- phoneme.fda.lda.test$scaling
+Xtest <- as.matrix(phoneme.acp.test.scores[,1:5])
+Ztest <- Xtest%*%Utest
+
+cp1 <- 1
+cp2 <- 2
+
+plot(Z[phoneme.train.label=="aa",cp1],Z[phoneme.train.label=="aa",cp2],xlim=range(Z[,1]),ylim=range(Z[,2]),xlab="Z1",ylab="Z2")
+points(Z[phoneme.train.label=="ao",cp1],Z[phoneme.train.label=="ao",cp2],pch=2,col="blue")
+points(Z[phoneme.train.label=="dcl",cp1],Z[phoneme.train.label=="dcl",cp2],pch=3,col="red")
+points(Z[phoneme.train.label=="iy",cp1],Z[phoneme.train.label=="iy",cp2],pch=4,col="pink")
+points(Z[phoneme.train.label=="sh",cp1],Z[phoneme.train.label=="sh",cp2],pch=5,col="yellow")
+legend("topleft", inset=.05, title="Phoneme", c("aa", "ao", "dcl","iy","sh"), fill=c("black","blue","red","pink","yellow"), horiz=TRUE)
+
+#  		--- LDA - 11% d erreur ---
+phoneme.fda.lda <- lda(phoneme.train.label~.,data=as.data.frame(Z))
+phoneme.fda.lda.pred <- predict(phoneme.fda.lda, newdata=as.data.frame(Ztest))
+phoneme.fda.lda.perf <- table(phoneme.test.label,phoneme.fda.lda.pred$class)
+phoneme.fda.lda.error <- 1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test))
+print(phoneme.fda.lda.error)
+
+#		--- QDA - 10.73% d erreur ---
+phoneme.fda.qda <- qda(phoneme.train.label~.,data=as.data.frame(Z))
+phoneme.fda.qda.pred <- predict(phoneme.fda.qda, newdata=as.data.frame(Ztest))
+phoneme.fda.qda.perf <- table(phoneme.test.label,phoneme.fda.qda.pred$class)
+phoneme.fda.qda.error <- 1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test))
+print(phoneme.fda.qda.error)
+
+#		--- Regression logistique - 11.4% d'erreur ---
+phoneme.fda.glmnet <- glmnet(as.matrix(Z),y=phoneme.train.label,family="multinomial")
+phoneme.fda.glmnet.pred <- predict(phoneme.fda.glmnet,newx=as.matrix(Ztest),type="response",s=phoneme.fda.glmnet$lambda.min)
+# phoneme.glmnet.pred est un tableau 3 dimensions :
+#	- La premiere est sur nos obsvervations (1500 dans l'ensemble de test)
+#	- La deuxieme est sur nos types de phonemes (5types de phonemes)
+#	- La troisieme est sur l'iteration
+phoneme.fda.glmnet.res<-c(rep(0,1500))
+for (i in 1:1500)
+{
+	class <- ""
+	res<-which.max(phoneme.fda.glmnet.pred[i,1:5,100])
+	{
+		if(res==1)
+		{
+			class <- "aa"
+		}
+		else if(res==2){
+			class <- "ao"
+		}
+		else if(res==3){
+			class <- "dcl"
+		}
+		else if(res==4){
+			class <- "iy"
+		}
+		else{
+			class <- "sh"
+		}
+	}
+	phoneme.fda.glmnet.res[i] <- class 
+}
+phoneme.fda.glmnet.perf <- table(phoneme.test.label,phoneme.fda.glmnet.res)
+phoneme.fda.glmnet.error <- 1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test))
+print(phoneme.fda.glmnet.error)
+
+#		--- KPPV - 10.47% d'erreur - koptimal 16 ---
+phoneme.fda.knn.error<-rep(0,20)
+for(k in 1:20)
+{
+	phoneme.fda.knn <- knn(as.data.frame(Z), as.data.frame(Ztest), phoneme.train.label,k=k)
+	phoneme.fda.knn.error[k] <- (length(which(FALSE==(phoneme.fda.knn==phoneme.test.label))))/length(phoneme.test.label)
+
+}
+print(phoneme.fda.knn.error)
 # ------------------------------------------------ INTERPRETATION -------------------------------------------------
 
 # Les phonemes aa et ao sont tres ressemblants, la plupart des errerus de classification concernent ces deux phonemes.
