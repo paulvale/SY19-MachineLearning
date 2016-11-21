@@ -36,7 +36,7 @@ reg.order <- reg.fit$vorder
 reg.order <- reg.order - 1
 reg.order <- reg.order[2:length(reg.order)]
 data.colnames <- colnames(data.train)
-plot(reg.fit, scale="r2")
+plot(reg.fit, scale="r2", cex=0.5)
 readline(prompt="Press [enter] to continue")
 Formula <- getFormulas(data.colnames, reg.order, "label.cv")
 
@@ -90,17 +90,24 @@ validMSEP = MSEP(model.pcr)
 num_pred <- c(1:length(reg.order))
 
 # Linear Regression
-#plot(num_pred,error.linear, type="l")
-#print(num_pred[which.min(error.linear)])
-#print(min(error.linear))
-#readline(prompt="Press [enter] to continue")
+plot(num_pred,error.linear, type="l")
+print(num_pred[which.min(error.linear)])
+print(min(error.linear))
+readline(prompt="Press [enter] to continue")
 
 # Ridge to Lasso
 for(lambda in 1:length(valueOfLambda)){
-  #plot(num_pred,error.elasticNet[,lambda], type="l")
-  #print(num_pred[which.min(error.elasticNet[,lambda])])
+  plot(num_pred,error.elasticNet[,lambda], type="l")
+  print(num_pred[which.min(error.elasticNet[,lambda])])
+  print(min(error.elasticNet[,lambda]))
+  readline(prompt="Press [enter] to continue")
+}
+
+for(number in 1:data.train.dim[2]){
+  plot(valueOfLambda,error.elasticNet[number,], type="l")
+  #print(num_pred[which.min(error.elasticNet[number,])])
   #print(min(error.elasticNet[,lambda]))
-  #readline(prompt="Press [enter] to continue")
+  readline(prompt="Press [enter] to continue")
 }
 
 # PCR

@@ -11,7 +11,7 @@ label <- cancer$Time
 data.dim <- dim(data)
 
 # 1 - Separation des donnees en test, app
-napp <- round(2/3*data.dim[1])
+napp <- round(8/10*data.dim[1])
 indice <- sample(1:data.dim[1], napp)
 
 data.train <- data[indice,]
