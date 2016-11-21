@@ -7,6 +7,8 @@ library(glmnet)
 library(leaps)
 library("FNN", character.only = TRUE)
 library("hydroGOF", character.only = TRUE)
+library(tree)
+library(e1071)
 phoneme = read.table("data/phoneme.data.txt",header=T,sep=",")
 # ====
 # x.1, x.2, ... x.256, g, speaker
@@ -59,7 +61,7 @@ y <- phoneme$speaker
 # et ce log-periodogram comprend 256 features
 # nos datas 
 # --------------------------------------------- SCALING DATAS ---------------------------------------------------------
-
+print("scaling datas")
 # Toutes les datas ont plus ou moins une variance et une une moyenne identique, nous centrons et reduisons quand meme 
 # pour etre sur de rendre ces variables comparables
 
@@ -67,7 +69,7 @@ phoneme[,2:257] <- as.data.frame(scale(phoneme[,2:257]))
 
 
 # -------------------------------------------- DATA SEPARATION --------------------------------------------------------
-
+print("data separation")
 #		Marceau : Je propose la dessus de respecter les 5 criteres de separation donnes par TIMIT
 #			1 : 2/3 de train et 1/3 de test
 #			2 : Aucun speaker ne doit apparaitre dans train et test (il suffit de faire attention pour cela a bien basculer tous les enregistrements
@@ -119,7 +121,7 @@ phoneme.test.label <- phoneme.test[,258]
 
 
 # ------------------------------------------------ CONSTRUCTION OF MODELS -------------------------------------------------
-
+print("Prédiction des modeles sans travail préalable des données")
 #on doit ici predire une classe et non une valeur, on utilisera donc des methodes de classification et non de regression
 
 #  		--- LDA - 8.6% d erreur ---
@@ -187,6 +189,23 @@ for(k in 8:8)
 }
 print(phoneme.knn.error)
 
+#		--- Classifiation tree - 14.8% d'erreur ---
+print("TREE - Errors : ")
+phoneme.tree<- tree(phoneme.train.label~ ., data=phoneme.train.data) 
+phoneme.tree.pred<-predict(phoneme.tree, phoneme.test.data, type="class")
+phoneme.tree.perf <- table(phoneme.tree.pred, phoneme.test.label)
+phoneme.tree.error <- (sum(phoneme.tree.perf)-sum(diag(phoneme.tree.perf)))/nrow(phoneme.test.data)
+print(phoneme.tree.error)
+
+
+#		--- Classifieur bayesien naif - 12.53% d'erreur ---
+print("BAYES - Errors : ")
+phoneme.naive<- naiveBayes(phoneme.train.label~., data=phoneme.train.data)
+phoneme.naive.pred<-predict(phoneme.naive,newdata=phoneme.test.data)
+phoneme.naive.perf <-table(phoneme.test.label,phoneme.naive.pred)
+phoneme.naive.error <- 1-sum(diag(phoneme.naive.perf))/nrow(phoneme.test.data)
+print(phoneme.naive.error)
+
 #regarder si toutes les varibles sont importants (regarder la correlation des variables)
 #regularisation : regarder si rajouter un terme on a pas un meilleur modele (regarder la correlation des variables)
 #facteur analysis : changemet de repere 
@@ -194,21 +213,29 @@ print(phoneme.knn.error)
 
 
 # ------------------------------------------------ SUBSET SELECTION -------------------------------------------------
+print("Reduction du nombre de variable en utilisant la subset selection")
 reg.fit<- regsubsets(phoneme.train.label~.,data=phoneme.train.data,method='forward',nvmax=256)
 summary.regsubsets <- summary(reg.fit)
 summary.regsubsets.which<-summary.regsubsets$which #permet de savoir quels variables sont dans quels modeles. (il faut decaler de 2)
 LDA_ERROR <- matrix(0,ncol=2,nrow=250)
 QDA_ERROR <- matrix(0,ncol=2,nrow=250)
 KNN_ERROR <- matrix(0,ncol=2,nrow=250)
+TREE_ERROR <- matrix(0,ncol=2,nrow=250)
+BAYES_ERROR <- matrix(0,ncol=2,nrow=250)
 lda.min <- 100
 qda.min <- 100
 knn.min <- 100
+tree.min <- 100
+bayes.min <- 100
 lda.subset <- summary.regsubsets.which[2,3:257]
 qda.subset <- summary.regsubsets.which[2,3:257]
 knn.subset <- summary.regsubsets.which[2,3:257]
+tree.subset <- summary.regsubsets.which[2,3:257]
+bayes.subset <- summary.regsubsets.which[2,3:257]
 k.opt <- 0
-for(i in 2:250)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
+for(i in 20:150)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
 {
+	print(i)
 	# selection des nouveaux jeux de données selon le nombre de variables gardés.
 	new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[i,3:257]]
 	new.phoneme.train.data<-as.data.frame(new.phoneme.train.data)
@@ -254,6 +281,32 @@ for(i in 2:250)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats p
 			k.opt <- k
 		}
 	}
+
+	#		--- Classifiation tree - 12.53% d'erreur avec 60 variables ---
+	new.phoneme.tree<- tree(phoneme.train.label~ ., data=new.phoneme.train.data) 
+	new.phoneme.tree.pred<-predict(new.phoneme.tree, new.phoneme.test.data, type="class")
+	new.phoneme.tree.perf <- table(new.phoneme.tree.pred, phoneme.test.label)
+	TREE_ERROR[i,2] <- (sum(new.phoneme.tree.perf)-sum(diag(new.phoneme.tree.perf)))/nrow(phoneme.test)
+	TREE_ERROR[i,1] <- i
+	if(TREE_ERROR[i,2]<tree.min)
+	{
+		tree.min <- TREE_ERROR[i,2]
+		tree.subset <- summary.regsubsets.which[i,3:257]
+	}
+
+
+	#		--- Classifieur bayesien naif - 10.27% d'erreur avec 57 variables ---
+	new.phoneme.naive<- naiveBayes(phoneme.train.label~., data=new.phoneme.train.data)
+	new.phoneme.naive.pred<-predict(new.phoneme.naive,newdata=new.phoneme.test.data)
+	new.phoneme.naive.perf <-table(phoneme.test.label,new.phoneme.naive.pred)
+	new.phoneme.naive.error <- 1-sum(diag(new.phoneme.naive.perf))/nrow(phoneme.test)
+	BAYES_ERROR[i,2] <- 1-sum(diag(new.phoneme.naive.perf))/nrow(phoneme.test)
+	BAYES_ERROR[i,1] <- i
+	if(BAYES_ERROR[i,2]<bayes.min)
+	{
+		bayes.min <- BAYES_ERROR[i,2]
+		bayes.subset <- summary.regsubsets.which[i,3:257]
+	}
 	
 }
 print("Apres subset selection : ")
@@ -263,6 +316,10 @@ print("QDA error minimale : ")
 print(qda.min)
 print("KNN error minimale : ")
 print(knn.min)
+print("TREE error minimale : ")
+print(tree.min)
+print("BAYES error minimale : ")
+print(bayes.min)
 
 # On peut deduire de ce modele qu'une selection de variable reduit notre erreur moyenne de nos modele.
 # Pour l analyse discriminnate lineaire  l erreur descend a 7.87% lorsqu'on garde 132 variables
@@ -279,7 +336,7 @@ print(knn.min)
 # Si les variables sont correlees, l'algorithme en choisi une et la met a 0
 
 # ------------------------------------------------ ANALYSE EN COMPOSANTE PRINCIPALE -------------------------------------------------
-
+print("ACP")
 # Nous avons effectué une analyse en composante principale 
 # l'idee serait de creer un nouvel axe factoriel et de creer un modele a partir de la
 phoneme.acp <- princomp(phoneme.train.data)
@@ -300,6 +357,7 @@ phoneme.acp.lda <- lda(phoneme.train.label~.,data=phoneme.acp.train.scores[,1:5]
 phoneme.acp.lda.pred <- predict(phoneme.acp.lda, newdata=phoneme.acp.test.scores[,1:5])
 phoneme.acp.lda.perf <- table(phoneme.test.label,phoneme.acp.lda.pred$class)
 phoneme.acp.lda.error <- 1 - sum(diag(phoneme.acp.lda.perf))/(nrow(phoneme.test))
+print("LDA avec ACP 5 dimensions: ")
 print(phoneme.acp.lda.error)
 
 #		--- QDA - 10.87% d erreur ---
@@ -307,6 +365,7 @@ phoneme.acp.qda <- qda(phoneme.train.label~.,data=phoneme.acp.train.scores[,1:5]
 phoneme.acp.qda.pred <- predict(phoneme.acp.qda, newdata=phoneme.acp.test.scores[,1:5])
 phoneme.acp.qda.perf <- table(phoneme.test.label,phoneme.acp.qda.pred$class)
 phoneme.acp.qda.error <- 1 - sum(diag(phoneme.acp.qda.perf))/(nrow(phoneme.test))
+print("QDA avec ACP 5 dimensions: ")
 print(phoneme.acp.qda.error)
 
 #		--- Regression logistique - 11.07% d'erreur ---
@@ -343,9 +402,10 @@ for (i in 1:1500)
 }
 phoneme.acp.glmnet.perf <- table(phoneme.test.label,phoneme.acp.glmnet.res)
 phoneme.acp.glmnet.error <- 1 - sum(diag(phoneme.acp.glmnet.perf))/(nrow(phoneme.test))
+print("Regression logistique avec ACP 5 dimensions : ")
 print(phoneme.acp.glmnet.error)
 
-#		--- KPPV - 11.2% d'erreur - koptimal 8 ---
+#		--- KNN - 11.2% d'erreur - koptimal 8 ---
 phoneme.acp.knn.error<-rep(0,20)
 for(k in 1:10)
 {
@@ -353,14 +413,32 @@ for(k in 1:10)
 	phoneme.acp.knn.error[k] <- (length(which(FALSE==(phoneme.acp.knn==phoneme.test.label))))/length(phoneme.test.label)
 
 }
+print("KNN avec ACP 5 dimensions: ")
 print(phoneme.acp.knn.error)
+
+#		--- Classifiation tree - 15.73% d'erreur ---
+print("TREE - Errors : ")
+phoneme.acp.tree<- tree(phoneme.train.label~ ., data=phoneme.acp.train.scores[,1:5]) 
+phoneme.acp.tree.pred<-predict(phoneme.acp.tree, phoneme.acp.test.scores[,1:5], type="class")
+phoneme.acp.tree.perf <- table(phoneme.acp.tree.pred, phoneme.test.label)
+phoneme.acp.tree.error <- (sum(phoneme.acp.tree.perf)-sum(diag(phoneme.acp.tree.perf)))/nrow(phoneme.test.data)
+print(phoneme.acp.tree.error)
+
+
+#		--- Classifieur bayesien naif - 12.47% d'erreur ---
+print("BAYES - Errors : ")
+phoneme.acp.naive<- naiveBayes(phoneme.train.label~., data=phoneme.acp.train.scores[,1:5])
+phoneme.acp.naive.pred<-predict(phoneme.acp.naive,newdata=phoneme.acp.test.scores[,1:5])
+phoneme.acp.naive.perf <-table(phoneme.test.label,phoneme.acp.naive.pred)
+phoneme.acp.naive.error <- 1-sum(diag(phoneme.acp.naive.perf))/nrow(phoneme.test.data)
+print(phoneme.acp.naive.error)
 # On peut donc déduire de cette analyse 2 choses 
 #	- Nos deux phonemes a et sh sont tres ressemblant et n'arrivent pas a se dissocier sur les axes factoriels
 #	- Il serait interessant de recreer des modeles en utilisant les premiers et troisieme axes factoriels qui séparent bien nos variables (sauf aa et sh)
 
 
 # ------------------------------------------------ FDA -------------------------------------------------
-
+print("FDA")
 
 phoneme.fda.lda<-lda(phoneme.train.label~. ,data=phoneme.train.data)
 U <- phoneme.fda.lda$scaling
@@ -387,6 +465,7 @@ phoneme.fda.lda <- lda(phoneme.train.label~.,data=as.data.frame(Z))
 phoneme.fda.lda.pred <- predict(phoneme.fda.lda, newdata=as.data.frame(Ztest))
 phoneme.fda.lda.perf <- table(phoneme.test.label,phoneme.fda.lda.pred$class)
 phoneme.fda.lda.error <- 1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test))
+print("LDA avec FDA : ")
 print(phoneme.fda.lda.error)
 
 #		--- QDA - 5.67% d erreur ---
@@ -394,6 +473,7 @@ phoneme.fda.qda <- qda(phoneme.train.label~.,data=as.data.frame(Z))
 phoneme.fda.qda.pred <- predict(phoneme.fda.qda, newdata=as.data.frame(Ztest))
 phoneme.fda.qda.perf <- table(phoneme.test.label,phoneme.fda.qda.pred$class)
 phoneme.fda.qda.error <- 1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test))
+print("QDA avec FDA : ")
 print(phoneme.fda.qda.error)
 
 #		--- Regression logistique - 5.27% d'erreur ---
@@ -430,9 +510,10 @@ for (i in 1:1500)
 }
 phoneme.fda.glmnet.perf <- table(phoneme.test.label,phoneme.fda.glmnet.res)
 phoneme.fda.glmnet.error <- 1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test))
+print("Regression logistique avec FDA : ")
 print(phoneme.fda.glmnet.error)
 
-#		--- KPPV - 5% d'erreur - koptimal 7 ---
+#		--- KNN - 5% d'erreur - koptimal 7 ---
 phoneme.fda.knn.error<-rep(0,20)
 for(k in 1:10)
 {
@@ -440,11 +521,30 @@ for(k in 1:10)
 	phoneme.fda.knn.error[k] <- (length(which(FALSE==(phoneme.fda.knn==phoneme.test.label))))/length(phoneme.test.label)
 
 }
+print("KNN avec FDA : ")
 print(phoneme.fda.knn.error)
+
+
+#		--- Classifiation tree - 5.2% d'erreur ---
+print("TREE - Errors : ")
+phoneme.fda.tree<- tree(phoneme.train.label~ ., data=as.data.frame(Z)) 
+phoneme.fda.tree.pred<-predict(phoneme.fda.tree, as.data.frame(Ztest), type="class")
+phoneme.fda.tree.perf <- table(phoneme.fda.tree.pred, phoneme.test.label)
+phoneme.fda.tree.error <- (sum(phoneme.fda.tree.perf)-sum(diag(phoneme.fda.tree.perf)))/nrow(phoneme.test.data)
+print(phoneme.fda.tree.error)
+
+
+#		--- Classifieur bayesien naif - 5.6% d'erreur ---
+print("BAYES - Errors : ")
+phoneme.fda.naive<- naiveBayes(phoneme.train.label~., data=as.data.frame(Z))
+phoneme.fda.naive.pred<-predict(phoneme.fda.naive,newdata=as.data.frame(Ztest))
+phoneme.fda.naive.perf <-table(phoneme.test.label,phoneme.fda.naive.pred)
+phoneme.fda.naive.error <- 1-sum(diag(phoneme.fda.naive.perf))/nrow(phoneme.test.data)
+print(phoneme.fda.naive.error)
 
 # ------------------------------------------------ FDA + ACP -------------------------------------------------
 
-
+print("FDA + ACP")
 phoneme.fda.lda<-lda(phoneme.train.label~. ,data=as.data.frame(phoneme.acp.train.scores[,1:5]))
 U <- phoneme.fda.lda$scaling
 X <- as.matrix(phoneme.acp.train.scores[,1:5])
@@ -470,6 +570,7 @@ phoneme.fda.lda <- lda(phoneme.train.label~.,data=as.data.frame(Z))
 phoneme.fda.lda.pred <- predict(phoneme.fda.lda, newdata=as.data.frame(Ztest))
 phoneme.fda.lda.perf <- table(phoneme.test.label,phoneme.fda.lda.pred$class)
 phoneme.fda.lda.error <- 1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test))
+print("LDA avec FDA + ACP : ")
 print(phoneme.fda.lda.error)
 
 #		--- QDA - 10.73% d erreur ---
@@ -477,6 +578,7 @@ phoneme.fda.qda <- qda(phoneme.train.label~.,data=as.data.frame(Z))
 phoneme.fda.qda.pred <- predict(phoneme.fda.qda, newdata=as.data.frame(Ztest))
 phoneme.fda.qda.perf <- table(phoneme.test.label,phoneme.fda.qda.pred$class)
 phoneme.fda.qda.error <- 1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test))
+print("QDA avec FDA + ACP : ")
 print(phoneme.fda.qda.error)
 
 #		--- Regression logistique - 11.4% d'erreur ---
@@ -513,6 +615,7 @@ for (i in 1:1500)
 }
 phoneme.fda.glmnet.perf <- table(phoneme.test.label,phoneme.fda.glmnet.res)
 phoneme.fda.glmnet.error <- 1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test))
+print("Regression logistique avec FDA + ACP : ")
 print(phoneme.fda.glmnet.error)
 
 #		--- KPPV - 10.47% d'erreur - koptimal 16 ---
@@ -523,7 +626,29 @@ for(k in 1:20)
 	phoneme.fda.knn.error[k] <- (length(which(FALSE==(phoneme.fda.knn==phoneme.test.label))))/length(phoneme.test.label)
 
 }
+print("KNN avec FDA + ACP : ")
 print(phoneme.fda.knn.error)
+
+#		--- Classifiation tree - 15.27% d'erreur ---
+print("TREE - Errors avec FDA + ACP : ")
+phoneme.fda.tree<- tree(phoneme.train.label~ ., data=as.data.frame(Z)) 
+phoneme.fda.tree.pred<-predict(phoneme.fda.tree, as.data.frame(Ztest), type="class")
+phoneme.fda.tree.perf <- table(phoneme.fda.tree.pred, phoneme.test.label)
+phoneme.fda.tree.error <- (sum(phoneme.fda.tree.perf)-sum(diag(phoneme.fda.tree.perf)))/nrow(phoneme.test.data)
+print(phoneme.fda.tree.error)
+
+
+#		--- Classifieur bayesien naif - 11.2% d'erreur ---
+print("BAYES - Errors avec FDA + ACP : ")
+phoneme.fda.naive<- naiveBayes(phoneme.train.label~., data=as.data.frame(Z))
+phoneme.fda.naive.pred<-predict(phoneme.fda.naive,newdata=as.data.frame(Ztest))
+phoneme.fda.naive.perf <-table(phoneme.test.label,phoneme.fda.naive.pred)
+phoneme.fda.naive.error <- 1-sum(diag(phoneme.fda.naive.perf))/nrow(phoneme.test.data)
+print(phoneme.fda.naive.error)
+
+# L AFD seule nous donne des meilleurs résultats car une meilleure séparation des clusters
+
+
 # ------------------------------------------------ INTERPRETATION -------------------------------------------------
 
 # Les phonemes aa et ao sont tres ressemblants, la plupart des errerus de classification concernent ces deux phonemes.
