@@ -8,6 +8,9 @@ library(glmnet)
 library(pls)
 source("cancer/cancer_dataSeparation.r")
 
+
+# Fonction permettant de recuperer toutes les formules pour 
+# les regressions lineaires 
 getFormulas <- function(col, order, label) {
   result <- vector(mode="character", length=length(order))
   for(i in 1:length(order)){
@@ -42,7 +45,6 @@ Formula <- getFormulas(data.colnames, reg.order, "label.cv")
 
 # On prend generalement 5 ou 10 comme valeur de K 
 # C'est deux valeurs correspondant a un bon compromis biais-vairance
-# on va donc ici essayer avec les 2 differentes valeurs et observer nos resultats
 
 # Initialisation de nos vecteurs erreurs pour nos 32 modeles differents
 # On va choisir 4 techniques differentes : linear, lasso, ridge et elasticNet
@@ -62,6 +64,7 @@ for(i in (1:data.train.dim[2])){
     error.linear[i] <- error.linear[i] + sum((label.train[folds==k]-pred)^2)
   }
   error.linear[i]<-error.linear[i]/data.train.dim[1]
+  
   # 2 - Preparation de la matrix pour les regularisations 
   if( i == 1){
     data.regression <- as.matrix(data.train[,which(reg.order == i),])
@@ -78,7 +81,6 @@ for(i in (1:data.train.dim[2])){
     cv.elastic.out <- cv.glmnet(data.regression.train, label.train, alpha = valueOfLambda[l])  
     error.elasticNet[i,l]<-min(cv.elastic.out$cvm)
   }
-  #readline(prompt="Press [enter] to continue")
 }
 
 # Dernier modele : PCR (Principal Component regression)
@@ -97,16 +99,9 @@ readline(prompt="Press [enter] to continue")
 
 # Ridge to Lasso
 for(lambda in 1:length(valueOfLambda)){
-  plot(num_pred,error.elasticNet[,lambda], type="l")
+  plot(num_pred,error.elasticNet[,lambda], type="l", ylab="MSE")
   print(num_pred[which.min(error.elasticNet[,lambda])])
   print(min(error.elasticNet[,lambda]))
-  readline(prompt="Press [enter] to continue")
-}
-
-for(number in 1:data.train.dim[2]){
-  plot(valueOfLambda,error.elasticNet[number,], type="l")
-  #print(num_pred[which.min(error.elasticNet[number,])])
-  #print(min(error.elasticNet[,lambda]))
   readline(prompt="Press [enter] to continue")
 }
 
@@ -164,29 +159,42 @@ if( (min(error.elasticNet) < min(error.linear)) && (min(error.elasticNet) < min(
   data.regression.test <- as.data.frame(data.regression.test)
   data.test <- model.matrix(label.test~.,data.regression.test)
   
+  # Calcul du lambda.min
   cv.out <- cv.glmnet(data.regression.train, label.train, alpha = alpha)
+  
+  # Calcul du modèle
   fit <- glmnet(data.regression.train, label.train, lambda=cv.out$lambda.min, alpha = alpha)
   pred <- predict(fit, s=cv.out$lambda.min, newx=data.test)
+  
+  # Calcul de l'erreur
   error <- mean((label.test-pred)^2)
 } else if ((min(error.linear) < min(error.elasticNet)) && (min(error.linear) < min(validMSEP$val["CV",,]))) {
   print("linear")
   print(which.min(error.linear))
   numberOfParameters <- which.min(error.linear)
   FormulaTest <- getFormulas(data.colnames, reg.order, "label.train")
-
+  
+  # Calcul du modèle
   reg <- lm(formula = FormulaTest[numberOfParameters],data=data.train)
   pred <- predict(reg, newdata=data.test)
+  
+  # Calcul de l'erreur
   error <- mean((label.test-pred)^2)
 } else {
+  
   print("pcr")
   print(which.min(validMSEP$val["CV",,]))
+  
+  # Calcul du modèle
   model.pcr <- pcr(label.train~., data=data.train, ncomp=which.min(validMSEP$val["CV",,]))
   summary(fit.pcr)
-  
   pred.pcr <- predict(model.pcr, newdata=data.test)
+  
+  # Calcul de l'erreur
   print(mean((pred.pcr - label.test)^2))
 }
 
+# Affichage de l'erreur
 print(error)
 
 
