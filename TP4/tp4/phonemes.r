@@ -233,7 +233,7 @@ knn.subset <- summary.regsubsets.which[2,3:257]
 tree.subset <- summary.regsubsets.which[2,3:257]
 bayes.subset <- summary.regsubsets.which[2,3:257]
 k.opt <- 0
-for(i in 20:150)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
+for(i in 132:132)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
 {
 	print(i)
 	# selection des nouveaux jeux de données selon le nombre de variables gardés.
@@ -466,6 +466,7 @@ phoneme.fda.lda.pred <- predict(phoneme.fda.lda, newdata=as.data.frame(Ztest))
 phoneme.fda.lda.perf <- table(phoneme.test.label,phoneme.fda.lda.pred$class)
 phoneme.fda.lda.error <- 1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test))
 print("LDA avec FDA : ")
+print(phoneme.fda.lda.perf)
 print(phoneme.fda.lda.error)
 
 #		--- QDA - 5.67% d erreur ---
@@ -474,6 +475,7 @@ phoneme.fda.qda.pred <- predict(phoneme.fda.qda, newdata=as.data.frame(Ztest))
 phoneme.fda.qda.perf <- table(phoneme.test.label,phoneme.fda.qda.pred$class)
 phoneme.fda.qda.error <- 1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test))
 print("QDA avec FDA : ")
+print(phoneme.fda.qda.perf)
 print(phoneme.fda.qda.error)
 
 #		--- Regression logistique - 5.27% d'erreur ---
@@ -511,6 +513,7 @@ for (i in 1:1500)
 phoneme.fda.glmnet.perf <- table(phoneme.test.label,phoneme.fda.glmnet.res)
 phoneme.fda.glmnet.error <- 1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test))
 print("Regression logistique avec FDA : ")
+print(phoneme.fda.glmnet.perf)
 print(phoneme.fda.glmnet.error)
 
 #		--- KNN - 5% d'erreur - koptimal 7 ---
@@ -531,6 +534,7 @@ phoneme.fda.tree<- tree(phoneme.train.label~ ., data=as.data.frame(Z))
 phoneme.fda.tree.pred<-predict(phoneme.fda.tree, as.data.frame(Ztest), type="class")
 phoneme.fda.tree.perf <- table(phoneme.fda.tree.pred, phoneme.test.label)
 phoneme.fda.tree.error <- (sum(phoneme.fda.tree.perf)-sum(diag(phoneme.fda.tree.perf)))/nrow(phoneme.test.data)
+print(phoneme.fda.tree.perf)
 print(phoneme.fda.tree.error)
 
 
@@ -540,6 +544,7 @@ phoneme.fda.naive<- naiveBayes(phoneme.train.label~., data=as.data.frame(Z))
 phoneme.fda.naive.pred<-predict(phoneme.fda.naive,newdata=as.data.frame(Ztest))
 phoneme.fda.naive.perf <-table(phoneme.test.label,phoneme.fda.naive.pred)
 phoneme.fda.naive.error <- 1-sum(diag(phoneme.fda.naive.perf))/nrow(phoneme.test.data)
+print(phoneme.fda.naive.perf)
 print(phoneme.fda.naive.error)
 
 # ------------------------------------------------ FDA + ACP -------------------------------------------------
@@ -652,5 +657,5 @@ print(phoneme.fda.naive.error)
 # ------------------------------------------------ INTERPRETATION -------------------------------------------------
 
 # Les phonemes aa et ao sont tres ressemblants, la plupart des errerus de classification concernent ces deux phonemes.
-
+#Pour le taux d'erreur je choisis le taux de mauvaise classification
 
