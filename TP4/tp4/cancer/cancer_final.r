@@ -162,7 +162,7 @@ if( (min(error.elasticNet) < min(error.linear)) && (min(error.elasticNet) < min(
   # Calcul du lambda.min
   cv.out <- cv.glmnet(data.regression.train, label.train, alpha = alpha)
   
-  # Calcul du modèle
+  # Calcul du modele
   fit <- glmnet(data.regression.train, label.train, lambda=cv.out$lambda.min, alpha = alpha)
   pred <- predict(fit, s=cv.out$lambda.min, newx=data.test)
   
@@ -174,7 +174,7 @@ if( (min(error.elasticNet) < min(error.linear)) && (min(error.elasticNet) < min(
   numberOfParameters <- which.min(error.linear)
   FormulaTest <- getFormulas(data.colnames, reg.order, "label.train")
   
-  # Calcul du modèle
+  # Calcul du modele
   reg <- lm(formula = FormulaTest[numberOfParameters],data=data.train)
   pred <- predict(reg, newdata=data.test)
   
@@ -185,7 +185,7 @@ if( (min(error.elasticNet) < min(error.linear)) && (min(error.elasticNet) < min(
   print("pcr")
   print(which.min(validMSEP$val["CV",,]))
   
-  # Calcul du modèle
+  # Calcul du modele
   model.pcr <- pcr(label.train~., data=data.train, ncomp=which.min(validMSEP$val["CV",,]))
   summary(fit.pcr)
   pred.pcr <- predict(model.pcr, newdata=data.test)
