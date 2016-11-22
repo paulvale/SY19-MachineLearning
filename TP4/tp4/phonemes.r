@@ -217,96 +217,141 @@ print("Reduction du nombre de variable en utilisant la subset selection")
 reg.fit<- regsubsets(phoneme.train.label~.,data=phoneme.train.data,method='forward',nvmax=256)
 summary.regsubsets <- summary(reg.fit)
 summary.regsubsets.which<-summary.regsubsets$which #permet de savoir quels variables sont dans quels modeles. (il faut decaler de 2)
-LDA_ERROR <- matrix(0,ncol=2,nrow=250)
-QDA_ERROR <- matrix(0,ncol=2,nrow=250)
-KNN_ERROR <- matrix(0,ncol=2,nrow=250)
-TREE_ERROR <- matrix(0,ncol=2,nrow=250)
-BAYES_ERROR <- matrix(0,ncol=2,nrow=250)
+LDA_ERROR <- matrix(0,ncol=2,nrow=256)
+QDA_ERROR <- matrix(0,ncol=2,nrow=256)
+KNN_ERROR <- matrix(0,ncol=2,nrow=256)
+TREE_ERROR <- matrix(0,ncol=2,nrow=256)
+BAYES_ERROR <- matrix(0,ncol=2,nrow=256)
+GLMNET_ERROR <- matrix(0,ncol=2,nrow=256)
 lda.min <- 100
 qda.min <- 100
 knn.min <- 100
 tree.min <- 100
 bayes.min <- 100
+glmnet.min <- 100
 lda.subset <- summary.regsubsets.which[2,3:257]
 qda.subset <- summary.regsubsets.which[2,3:257]
 knn.subset <- summary.regsubsets.which[2,3:257]
 tree.subset <- summary.regsubsets.which[2,3:257]
 bayes.subset <- summary.regsubsets.which[2,3:257]
+glmnet.subset <- summary.regsubsets.which[2,3:257]
+new.phoneme.knn.error <- c(0,20)
 k.opt <- 0
-for(i in 132:132)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
+for(i in 2:256)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
 {
-	print(i)
-	# selection des nouveaux jeux de données selon le nombre de variables gardés.
-	new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[i,3:257]]
-	new.phoneme.train.data<-as.data.frame(new.phoneme.train.data)
-	new.phoneme.test.data<-phoneme.test.data[,summary.regsubsets.which[i,3:257]]
-	new.phoneme.test.data<-as.data.frame(new.phoneme.test.data)
-
-	#calcul des nouveaux taux d'erreur de chaque modele
-
-	#  		--- LDA - 7.87% d erreur - 132 variables gardées ---
-	new.phoneme.lda <- lda(phoneme.train.label~.,data=new.phoneme.train.data)
-	new.phoneme.lda.pred <- predict(new.phoneme.lda, newdata=new.phoneme.test.data)
-	new.phoneme.lda.perf <- table(phoneme.test.label,new.phoneme.lda.pred$class)
-	LDA_ERROR[i,2] <- 1 - sum(diag(new.phoneme.lda.perf))/(nrow(phoneme.test))
-	LDA_ERROR[i,1] <- i
-	if(LDA_ERROR[i,2]<lda.min)
+	if(i==37 || i==132 || i==48 || i==46 ||i==60 || i==57) # Ceci nous permet de gagner en temps car on connait deja les k optimaux
 	{
-		lda.min <- LDA_ERROR[i,2]
-		lda.subset <- summary.regsubsets.which[i,3:257]
-	}
+		# selection des nouveaux jeux de données selon le nombre de variables gardés.
+		new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[i,3:257]]
+		new.phoneme.train.data<-as.data.frame(new.phoneme.train.data)
+		new.phoneme.test.data<-phoneme.test.data[,summary.regsubsets.which[i,3:257]]
+		new.phoneme.test.data<-as.data.frame(new.phoneme.test.data)
 
-	#		--- QDA - 7.8% d erreur - 37 variables gardées ---
-	new.phoneme.qda <- qda(phoneme.train.label~.,data=new.phoneme.train.data)
-	new.phoneme.qda.pred <- predict(new.phoneme.qda, newdata=new.phoneme.test.data)
-	new.phoneme.qda.perf <- table(phoneme.test.label,new.phoneme.qda.pred$class)
-	QDA_ERROR[i,2] <- 1 - sum(diag(new.phoneme.qda.perf))/(nrow(phoneme.test))
-	QDA_ERROR[i,1] <- i
-	if(QDA_ERROR[i,2]<qda.min)
-	{
-		qda.min <- QDA_ERROR[i,2]
-		qda.subset <- summary.regsubsets.which[i,3:257]
-	}
-
-	#		--- KNN - 7.87% d erreur - k optimal 8 - 48 variables gardées ---
-	for(k in 8:8)
-	{
-		new.phoneme.knn <- knn(new.phoneme.train.data, new.phoneme.test.data, phoneme.train.label,k=k)
-		KNN_ERROR[i,2] <- (length(which(FALSE==(new.phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
-		KNN_ERROR[i,1] <- i
-		if(KNN_ERROR[i,2]<knn.min)
+		#calcul des nouveaux taux d'erreur de chaque modele
+		#  		--- LDA - 7.87% d erreur - 132 variables gardées ---
+		new.phoneme.lda <- lda(phoneme.train.label~.,data=new.phoneme.train.data)
+		new.phoneme.lda.pred <- predict(new.phoneme.lda, newdata=new.phoneme.test.data)
+		new.phoneme.lda.perf <- table(phoneme.test.label,new.phoneme.lda.pred$class)
+		LDA_ERROR[i,2] <- 1 - sum(diag(new.phoneme.lda.perf))/(nrow(phoneme.test))
+		LDA_ERROR[i,1] <- i
+		if(LDA_ERROR[i,2]<lda.min)
 		{
-			knn.min <- KNN_ERROR[i,2]
-			knn.subset <- summary.regsubsets.which[i,3:257]
-			k.opt <- k
+			lda.min <- LDA_ERROR[i,2]
+			lda.subset <- summary.regsubsets.which[i,3:257]
+		}
+
+		#		--- QDA - 7.8% d erreur - 37 variables gardées ---
+		new.phoneme.qda <- qda(phoneme.train.label~.,data=new.phoneme.train.data)
+		new.phoneme.qda.pred <- predict(new.phoneme.qda, newdata=new.phoneme.test.data)
+		new.phoneme.qda.perf <- table(phoneme.test.label,new.phoneme.qda.pred$class)
+		QDA_ERROR[i,2] <- 1 - sum(diag(new.phoneme.qda.perf))/(nrow(phoneme.test))
+		QDA_ERROR[i,1] <- i
+		if(QDA_ERROR[i,2]<qda.min)
+		{
+			qda.min <- QDA_ERROR[i,2]
+			qda.subset <- summary.regsubsets.which[i,3:257]
+		}
+
+		#		--- KNN - 7.87% d erreur - k optimal 8 - 48 variables gardées ---
+		for(k in 1:20)
+		{
+			new.phoneme.knn <- knn(new.phoneme.train.data, new.phoneme.test.data, phoneme.train.label,k=k)
+			KNN_ERROR[i,2] <- (length(which(FALSE==(new.phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
+			KNN_ERROR[i,1] <- i
+			new.phoneme.knn.error[k]<-(length(which(FALSE==(new.phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
+			if(KNN_ERROR[i,2]<knn.min)
+			{
+				knn.min <- KNN_ERROR[i,2]
+				knn.subset <- summary.regsubsets.which[i,3:257]
+				k.opt <- k
+			}
+		}
+
+		#		--- Classifiation tree - 12.53% d'erreur avec 60 variables ---
+		new.phoneme.tree<- tree(phoneme.train.label~ ., data=new.phoneme.train.data) 
+		new.phoneme.tree.pred<-predict(new.phoneme.tree, new.phoneme.test.data, type="class")
+		new.phoneme.tree.perf <- table(new.phoneme.tree.pred, phoneme.test.label)
+		TREE_ERROR[i,2] <- (sum(new.phoneme.tree.perf)-sum(diag(new.phoneme.tree.perf)))/nrow(phoneme.test)
+		TREE_ERROR[i,1] <- i
+		if(TREE_ERROR[i,2]<tree.min)
+		{
+			tree.min <- TREE_ERROR[i,2]
+			tree.subset <- summary.regsubsets.which[i,3:257]
+		}
+
+
+		#		--- Classifieur bayesien naif - 10.27% d'erreur avec 57 variables ---
+		new.phoneme.naive<- naiveBayes(phoneme.train.label~., data=new.phoneme.train.data)
+		new.phoneme.naive.pred<-predict(new.phoneme.naive,newdata=new.phoneme.test.data)
+		new.phoneme.naive.perf <-table(phoneme.test.label,new.phoneme.naive.pred)
+		new.phoneme.naive.error <- 1-sum(diag(new.phoneme.naive.perf))/nrow(phoneme.test)
+		BAYES_ERROR[i,2] <- 1-sum(diag(new.phoneme.naive.perf))/nrow(phoneme.test)
+		BAYES_ERROR[i,1] <- i
+		if(BAYES_ERROR[i,2]<bayes.min)
+		{
+			bayes.min <- BAYES_ERROR[i,2]
+			bayes.subset <- summary.regsubsets.which[i,3:257]
+		}
+
+		# --------- regression lineaire 7.73% d erreur pour 46 variables-----------------
+		new.phoneme.glmnet <- glmnet(as.matrix(new.phoneme.train.data),y=phoneme.train.label,family="multinomial")
+		new.phoneme.glmnet.pred <- predict(new.phoneme.glmnet,newx=as.matrix(new.phoneme.test.data),type="response",s=new.phoneme.glmnet$lambda.min)
+		new.phoneme.glmnet.res<-c(rep(0,1500))
+		for (h in 1:dim(new.phoneme.test.data)[1])
+		{
+			class <- ""
+			res<-which.max(new.phoneme.glmnet.pred[h,1:5,72])
+			{
+				if(res==1)
+				{
+					class <- "aa"
+				}
+				else if(res==2){
+					class <- "ao"
+				}
+				else if(res==3){
+					class <- "dcl"
+				}
+				else if(res==4){
+					class <- "iy"
+				}
+				else{
+					class <- "sh"
+				}
+			}
+			new.phoneme.glmnet.res[h] <- class 
+		}
+		new.phoneme.glmnet.perf <- table(phoneme.test.label,new.phoneme.glmnet.res)
+		print(1 - sum(diag(new.phoneme.glmnet.perf))/(nrow(new.phoneme.test.data)))
+		GLMNET_ERROR[i,2] <- 1 - sum(diag(new.phoneme.glmnet.perf))/(nrow(new.phoneme.test.data))
+		GLMNET_ERROR[i,1] <- i
+		if(GLMNET_ERROR[i,2]<glmnet.min)
+		{
+			glmnet.min <- GLMNET_ERROR[i,2]
+			glmnet.subset <- summary.regsubsets.which[i,3:257]
 		}
 	}
-
-	#		--- Classifiation tree - 12.53% d'erreur avec 60 variables ---
-	new.phoneme.tree<- tree(phoneme.train.label~ ., data=new.phoneme.train.data) 
-	new.phoneme.tree.pred<-predict(new.phoneme.tree, new.phoneme.test.data, type="class")
-	new.phoneme.tree.perf <- table(new.phoneme.tree.pred, phoneme.test.label)
-	TREE_ERROR[i,2] <- (sum(new.phoneme.tree.perf)-sum(diag(new.phoneme.tree.perf)))/nrow(phoneme.test)
-	TREE_ERROR[i,1] <- i
-	if(TREE_ERROR[i,2]<tree.min)
-	{
-		tree.min <- TREE_ERROR[i,2]
-		tree.subset <- summary.regsubsets.which[i,3:257]
-	}
-
-
-	#		--- Classifieur bayesien naif - 10.27% d'erreur avec 57 variables ---
-	new.phoneme.naive<- naiveBayes(phoneme.train.label~., data=new.phoneme.train.data)
-	new.phoneme.naive.pred<-predict(new.phoneme.naive,newdata=new.phoneme.test.data)
-	new.phoneme.naive.perf <-table(phoneme.test.label,new.phoneme.naive.pred)
-	new.phoneme.naive.error <- 1-sum(diag(new.phoneme.naive.perf))/nrow(phoneme.test)
-	BAYES_ERROR[i,2] <- 1-sum(diag(new.phoneme.naive.perf))/nrow(phoneme.test)
-	BAYES_ERROR[i,1] <- i
-	if(BAYES_ERROR[i,2]<bayes.min)
-	{
-		bayes.min <- BAYES_ERROR[i,2]
-		bayes.subset <- summary.regsubsets.which[i,3:257]
-	}
+	
 	
 }
 print("Apres subset selection : ")
@@ -417,7 +462,7 @@ print("KNN avec ACP 5 dimensions: ")
 print(phoneme.acp.knn.error)
 
 #		--- Classifiation tree - 15.73% d'erreur ---
-print("TREE - Errors : ")
+print("TREE avec 5 dimensions : ")
 phoneme.acp.tree<- tree(phoneme.train.label~ ., data=phoneme.acp.train.scores[,1:5]) 
 phoneme.acp.tree.pred<-predict(phoneme.acp.tree, phoneme.acp.test.scores[,1:5], type="class")
 phoneme.acp.tree.perf <- table(phoneme.acp.tree.pred, phoneme.test.label)
@@ -426,7 +471,7 @@ print(phoneme.acp.tree.error)
 
 
 #		--- Classifieur bayesien naif - 12.47% d'erreur ---
-print("BAYES - Errors : ")
+print("BAYES avec 5 dimensions : ")
 phoneme.acp.naive<- naiveBayes(phoneme.train.label~., data=phoneme.acp.train.scores[,1:5])
 phoneme.acp.naive.pred<-predict(phoneme.acp.naive,newdata=phoneme.acp.test.scores[,1:5])
 phoneme.acp.naive.perf <-table(phoneme.test.label,phoneme.acp.naive.pred)
@@ -529,7 +574,7 @@ print(phoneme.fda.knn.error)
 
 
 #		--- Classifiation tree - 5.2% d'erreur ---
-print("TREE - Errors : ")
+print("TREE avec FDA : ")
 phoneme.fda.tree<- tree(phoneme.train.label~ ., data=as.data.frame(Z)) 
 phoneme.fda.tree.pred<-predict(phoneme.fda.tree, as.data.frame(Ztest), type="class")
 phoneme.fda.tree.perf <- table(phoneme.fda.tree.pred, phoneme.test.label)
@@ -539,7 +584,7 @@ print(phoneme.fda.tree.error)
 
 
 #		--- Classifieur bayesien naif - 5.6% d'erreur ---
-print("BAYES - Errors : ")
+print("BAYES avec FDA: ")
 phoneme.fda.naive<- naiveBayes(phoneme.train.label~., data=as.data.frame(Z))
 phoneme.fda.naive.pred<-predict(phoneme.fda.naive,newdata=as.data.frame(Ztest))
 phoneme.fda.naive.perf <-table(phoneme.test.label,phoneme.fda.naive.pred)

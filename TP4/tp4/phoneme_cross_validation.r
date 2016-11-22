@@ -75,141 +75,131 @@ for(i in 1:K){
 	phoneme.test.label <- cv.phoneme.train.label[folds==i]
 
 	# --------------- LDA ----------------------
-	#phoneme.lda <- lda(phoneme.train.label~.,data=phoneme.train.data)
-	#phoneme.lda.pred <- predict(phoneme.lda, newdata=phoneme.test.data)
-	#phoneme.lda.perf <- table(phoneme.test.label,phoneme.lda.pred$class)
-	#print((1 - sum(diag(phoneme.lda.perf))/(nrow(phoneme.test.data))))
-	#phoneme.lda.error <- phoneme.lda.error + (1 - sum(diag(phoneme.lda.perf))/(nrow(phoneme.test.data)))
+	phoneme.lda <- lda(phoneme.train.label~.,data=phoneme.train.data)
+	phoneme.lda.pred <- predict(phoneme.lda, newdata=phoneme.test.data)
+	phoneme.lda.perf <- table(phoneme.test.label,phoneme.lda.pred$class)
+	phoneme.lda.error <- phoneme.lda.error + (1 - sum(diag(phoneme.lda.perf))/(nrow(phoneme.test.data)))
 
 	# --------------- QDA ----------------------
-	#phoneme.qda <- qda(phoneme.train.label~.,data=phoneme.train.data)
-	#phoneme.qda.pred <- predict(phoneme.qda, newdata=phoneme.test.data)
-	#phoneme.qda.perf <- table(phoneme.test.label,phoneme.qda.pred$class)
-	#print(1 - sum(diag(phoneme.qda.perf))/(nrow(phoneme.test.data)))
-	#phoneme.qda.error <- phoneme.qda.error + 1 - sum(diag(phoneme.qda.perf))/(nrow(phoneme.test.data))
+	phoneme.qda <- qda(phoneme.train.label~.,data=phoneme.train.data)
+	phoneme.qda.pred <- predict(phoneme.qda, newdata=phoneme.test.data)
+	phoneme.qda.perf <- table(phoneme.test.label,phoneme.qda.pred$class)
+	phoneme.qda.error <- phoneme.qda.error + 1 - sum(diag(phoneme.qda.perf))/(nrow(phoneme.test.data))
 
-	#		--- KPPV - 9.27% d'erreur - koptimal 8 ---
-	#phoneme.knn.error<-rep(0,20)
-	#for(k in 8:8)
-	#{
-	#	phoneme.knn <- knn(phoneme.train.data, phoneme.test.data, phoneme.train.label,k=k)
-	#	phoneme.knn.error[k] <-phoneme.knn.error[k]  + (length(which(FALSE==(phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
+	#		--- KPPV ----
+	phoneme.knn.error<-rep(0,20)
+	for(k in 8:8)
+	{
+		phoneme.knn <- knn(phoneme.train.data, phoneme.test.data, phoneme.train.label,k=k)
+		phoneme.knn.error[k] <-phoneme.knn.error[k]  + (length(which(FALSE==(phoneme.knn==phoneme.test.label))))/length(phoneme.test.label)
 
-	#}
+	}
 
-	#phoneme.glmnet <- glmnet(as.matrix(phoneme.train.data),y=phoneme.train.label,family="multinomial")
-	#phoneme.glmnet.pred <- predict(phoneme.glmnet,newx=as.matrix(phoneme.test.data),type="response",s=phoneme.glmnet$lambda.min)
-	#phoneme.glmnet.res<-c(rep(0,dim(phoneme.test.data)[1]))
-	#for (h in 1:dim(phoneme.test.data)[1])
-	#{
-	#	class <- ""
-	#	res<-which.max(phoneme.glmnet.pred[h,1:5,100])
-	#	{
-	#		if(res==1)
-	#		{
-	#			class <- "aa"
-	#		}
-	#		else if(res==2){
-	#			class <- "ao"
-	#		}
-	#		else if(res==3){
-	#			class <- "dcl"
-	#		}
-	#		else if(res==4){
-	#			class <- "iy"
-	#		}
-	#		else{
-	#			class <- "sh"
-	#		}
-	#	}
-	#	phoneme.glmnet.res[h] <- class 
-	#}
-	#phoneme.glmnet.perf <- table(phoneme.test.label,phoneme.glmnet.res)
-	#print(1 - sum(diag(phoneme.glmnet.perf))/(nrow(phoneme.test.data)))
-	#phoneme.glmnet.error <-phoneme.glmnet.error + 1 - sum(diag(phoneme.glmnet.perf))/(nrow(phoneme.test.data))
+	# ---------- glmnet ---------------------
+	phoneme.glmnet <- glmnet(as.matrix(phoneme.train.data),y=phoneme.train.label,family="multinomial")
+	phoneme.glmnet.pred <- predict(phoneme.glmnet,newx=as.matrix(phoneme.test.data),type="response",s=phoneme.glmnet$lambda.min)
+	phoneme.glmnet.res<-c(rep(0,dim(phoneme.test.data)[1]))
+	for (h in 1:dim(phoneme.test.data)[1])
+	{
+		class <- ""
+		res<-which.max(phoneme.glmnet.pred[h,1:5,100])
+		{
+			if(res==1)
+			{
+				class <- "aa"
+			}
+			else if(res==2){
+				class <- "ao"
+			}
+			else if(res==3){
+				class <- "dcl"
+			}
+			else if(res==4){
+				class <- "iy"
+			}
+			else{
+				class <- "sh"
+			}
+		}
+		phoneme.glmnet.res[h] <- class 
+	}
+	phoneme.glmnet.perf <- table(phoneme.test.label,phoneme.glmnet.res)
+	phoneme.glmnet.error <-phoneme.glmnet.error + 1 - sum(diag(phoneme.glmnet.perf))/(nrow(phoneme.test.data))
 
 	#		--- Classifiation tree ------------
-	#phoneme.tree<- tree(phoneme.train.label~ ., data=phoneme.train.data) 
-	#phoneme.tree.pred<-predict(phoneme.tree, phoneme.test.data, type="class")
-	#phoneme.tree.perf <- table(phoneme.tree.pred, phoneme.test.label)
-	#print((sum(phoneme.tree.perf)-sum(diag(phoneme.tree.perf)))/nrow(phoneme.test.data))
-	#phoneme.tree.error <- phoneme.tree.error + (sum(phoneme.tree.perf)-sum(diag(phoneme.tree.perf)))/nrow(phoneme.test.data)
+	phoneme.tree<- tree(phoneme.train.label~ ., data=phoneme.train.data) 
+	phoneme.tree.pred<-predict(phoneme.tree, phoneme.test.data, type="class")
+	phoneme.tree.perf <- table(phoneme.tree.pred, phoneme.test.label)
+	phoneme.tree.error <- phoneme.tree.error + (sum(phoneme.tree.perf)-sum(diag(phoneme.tree.perf)))/nrow(phoneme.test.data)
 
 
 	#		--- Classifieur bayesien naif ----
-	#phoneme.naive<- naiveBayes(phoneme.train.label~., data=phoneme.train.data)
-	#phoneme.naive.pred<-predict(phoneme.naive,newdata=phoneme.test.data)
-	#phoneme.naive.perf <-table(phoneme.test.label,phoneme.naive.pred)
-	#print(1-sum(diag(phoneme.naive.perf))/nrow(phoneme.test.data))
-	#phoneme.naive.error <-phoneme.naive.error +  1-sum(diag(phoneme.naive.perf))/nrow(phoneme.test.data)
+	phoneme.naive<- naiveBayes(phoneme.train.label~., data=phoneme.train.data)
+	phoneme.naive.pred<-predict(phoneme.naive,newdata=phoneme.test.data)
+	phoneme.naive.perf <-table(phoneme.test.label,phoneme.naive.pred)
+	phoneme.naive.error <-phoneme.naive.error +  1-sum(diag(phoneme.naive.perf))/nrow(phoneme.test.data)
 
 	#	--------------------FDA --------------------------
-	#phoneme.fda.lda<-lda(phoneme.train.label~. ,data=phoneme.train.data)
-	#U <- phoneme.fda.lda$scaling
-	#X <- as.matrix(phoneme.train.data)
-	#Z <- X%*%U
+	phoneme.fda.lda<-lda(phoneme.train.label~. ,data=phoneme.train.data)
+	U <- phoneme.fda.lda$scaling
+	X <- as.matrix(phoneme.train.data)
+	Z <- X%*%U
 
-	#phoneme.fda.lda.test<-lda(phoneme.test.label~. ,data=phoneme.test.data)
-	#Utest <- phoneme.fda.lda.test$scaling
-	#Xtest <- as.matrix(phoneme.test.data)
-	#Ztest <- Xtest%*%Utest
+	phoneme.fda.lda.test<-lda(phoneme.test.label~. ,data=phoneme.test.data)
+	Utest <- phoneme.fda.lda.test$scaling
+	Xtest <- as.matrix(phoneme.test.data)
+	Ztest <- Xtest%*%Utest
 
-	#cp1 <- 1
-	#cp2 <- 2
+	cp1 <- 1
+	cp2 <- 2
 
-	#phoneme.fda.lda <- lda(phoneme.train.label~.,data=as.data.frame(Z))
-	#phoneme.fda.lda.pred <- predict(phoneme.fda.lda, newdata=as.data.frame(Ztest))
-	#phoneme.fda.lda.perf <- table(phoneme.test.label,phoneme.fda.lda.pred$class)
-	#print(1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test.data)))
-	#print(phoneme.fda.lda.perf)
-	#phoneme.fda.lda.error <-phoneme.fda.lda.error + (1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test.data)))
+	phoneme.fda.lda <- lda(phoneme.train.label~.,data=as.data.frame(Z))
+	phoneme.fda.lda.pred <- predict(phoneme.fda.lda, newdata=as.data.frame(Ztest))
+	phoneme.fda.lda.perf <- table(phoneme.test.label,phoneme.fda.lda.pred$class)
+	phoneme.fda.lda.error <-phoneme.fda.lda.error + (1 - sum(diag(phoneme.fda.lda.perf))/(nrow(phoneme.test.data)))
 
-	#phoneme.fda.qda <- qda(phoneme.train.label~.,data=as.data.frame(Z))
-	#phoneme.fda.qda.pred <- predict(phoneme.fda.qda, newdata=as.data.frame(Ztest))
-	#phoneme.fda.qda.perf <- table(phoneme.test.label,phoneme.fda.qda.pred$class)
-	#print(1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test.data)))
-	#print(phoneme.fda.qda.perf)
-	#phoneme.fda.qda.error <- phoneme.fda.qda.error + 1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test.data))
+	phoneme.fda.qda <- qda(phoneme.train.label~.,data=as.data.frame(Z))
+	phoneme.fda.qda.pred <- predict(phoneme.fda.qda, newdata=as.data.frame(Ztest))
+	phoneme.fda.qda.perf <- table(phoneme.test.label,phoneme.fda.qda.pred$class)
+	phoneme.fda.qda.error <- phoneme.fda.qda.error + 1 - sum(diag(phoneme.fda.qda.perf))/(nrow(phoneme.test.data))
 
-	#phoneme.fda.glmnet <- glmnet(as.matrix(Z),y=phoneme.train.label,family="multinomial")
-	#phoneme.fda.glmnet.pred <- predict(phoneme.fda.glmnet,newx=as.matrix(Ztest),type="response",s=phoneme.fda.glmnet$lambda.min)
-	#phoneme.fda.glmnet.res<-c(rep(0,dim(phoneme.test.data)[1]))
-	#for (h in 1:dim(phoneme.test.data)[1])
-	#{
-	#	class <- ""
-	#	res<-which.max(phoneme.fda.glmnet.pred[h,1:5,100])
-	#	{
-	#		if(res==1)
-	#		{
-	#			class <- "aa"
-	#		}
-	#		else if(res==2){
-	#			class <- "ao"
-	#		}
-	#		else if(res==3){
-	#			class <- "dcl"
-	#		}
-	#		else if(res==4){
-	#			class <- "iy"
-	#		}
-	#		else{
-	#			class <- "sh"
-	#		}
-	#	}
-	#	phoneme.fda.glmnet.res[h] <- class 
-	#}
-	#phoneme.fda.glmnet.perf <- table(phoneme.test.label,phoneme.fda.glmnet.res)
-	#print(phoneme.fda.glmnet.perf)
-	#print(1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test.data)))
-	#phoneme.fda.glmnet.error <-phoneme.fda.glmnet.error + 1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test.data))
+	phoneme.fda.glmnet <- glmnet(as.matrix(Z),y=phoneme.train.label,family="multinomial")
+	phoneme.fda.glmnet.pred <- predict(phoneme.fda.glmnet,newx=as.matrix(Ztest),type="response",s=phoneme.fda.glmnet$lambda.min)
+	phoneme.fda.glmnet.res<-c(rep(0,dim(phoneme.test.data)[1]))
+	for (h in 1:dim(phoneme.test.data)[1])
+	{
+		class <- ""
+		res<-which.max(phoneme.fda.glmnet.pred[h,1:5,100])
+		{
+			if(res==1)
+			{
+				class <- "aa"
+			}
+			else if(res==2){
+				class <- "ao"
+			}
+			else if(res==3){
+				class <- "dcl"
+			}
+			else if(res==4){
+				class <- "iy"
+			}
+			else{
+				class <- "sh"
+			}
+		}
+		phoneme.fda.glmnet.res[h] <- class 
+	}
+	phoneme.fda.glmnet.perf <- table(phoneme.test.label,phoneme.fda.glmnet.res)
+	phoneme.fda.glmnet.error <-phoneme.fda.glmnet.error + 1 - sum(diag(phoneme.fda.glmnet.perf))/(nrow(phoneme.test.data))
 
 	# ------------------------ subset selection --------------------
 
 	print("Reduction du nombre de variable en utilisant la subset selection")
+	print("par souci de performance, nous effectuons cette etape avec 100% des variables")
 
-	for(l in 10:256)#ca sert a rien de le faire jusqu'a 256 on a deja les resultats plus haut.
+	for(l in 256:256) # Pour tester tous les subsets il faut ecrire ceci : for(l in 2:256)
 	{
-		print(l)
 		# selection des nouveaux jeux de données selon le nombre de variables gardés.
 		new.phoneme.train.data<-phoneme.train.data[,summary.regsubsets.which[l,3:257]]
 		new.phoneme.train.data<-as.data.frame(new.phoneme.train.data)
@@ -218,7 +208,7 @@ for(i in 1:K){
 
 		#calcul des nouveaux taux d'erreur de chaque modele
 
-		#  		--- LDA - 7.87% d erreur - 132 variables gardées ---
+		#  		--- LDA ----
 		new.phoneme.lda <- lda(phoneme.train.label~.,data=new.phoneme.train.data)
 		new.phoneme.lda.pred <- predict(new.phoneme.lda, newdata=new.phoneme.test.data)
 		new.phoneme.lda.perf <- table(phoneme.test.label,new.phoneme.lda.pred$class)
@@ -229,7 +219,7 @@ for(i in 1:K){
 			lda.min[i] <- LDA_ERROR[l,2]
 			lda.subset <- summary.regsubsets.which[l,3:257]
 		}
-		#		--- QDA - 7.8% d erreur - 37 variables gardées ---
+		#		--- QDA ----
 		new.phoneme.qda <- qda(phoneme.train.label~.,data=new.phoneme.train.data)
 		new.phoneme.qda.pred <- predict(new.phoneme.qda, newdata=new.phoneme.test.data)
 		new.phoneme.qda.perf <- table(phoneme.test.label,new.phoneme.qda.pred$class)
@@ -240,7 +230,7 @@ for(i in 1:K){
 			qda.min[i] <- QDA_ERROR[l,2]
 			qda.subset <- summary.regsubsets.which[l,3:257]
 		}
-		#		--- KNN - 7.87% d erreur - k optimal 8 - 48 variables gardées ---
+		#		--- KNN ----
 		for(k in 8:8)
 		{
 			new.phoneme.knn <- knn(new.phoneme.train.data, new.phoneme.test.data, phoneme.train.label,k=k)
@@ -254,7 +244,7 @@ for(i in 1:K){
 			}
 		}
 
-		#		--- Classifiation tree - 12.53% d'erreur avec 60 variables ---
+		#		--- Classifiation tree ----
 		new.phoneme.tree<- tree(phoneme.train.label~ ., data=new.phoneme.train.data) 
 		new.phoneme.tree.pred<-predict(new.phoneme.tree, new.phoneme.test.data, type="class")
 		new.phoneme.tree.perf <- table(new.phoneme.tree.pred, phoneme.test.label)
@@ -267,7 +257,7 @@ for(i in 1:K){
 		}
 
 
-		#		--- Classifieur bayesien naif - 10.27% d'erreur avec 57 variables ---
+		#		--- Classifieur bayesien naif ----
 		new.phoneme.naive<- naiveBayes(phoneme.train.label~., data=new.phoneme.train.data)
 		new.phoneme.naive.pred<-predict(new.phoneme.naive,newdata=new.phoneme.test.data)
 		new.phoneme.naive.perf <-table(phoneme.test.label,new.phoneme.naive.pred)
@@ -279,24 +269,7 @@ for(i in 1:K){
 			bayes.min[i] <- BAYES_ERROR[l,2]
 			bayes.subset <- summary.regsubsets.which[l,3:257]
 		}
-		
 	}
-	print("Apres subset selection : ")
-	print("LDA error minimale : ")
-	print(lda.min)
-	plot(LDA_ERROR)
-	print("QDA error minimale : ")
-	print(qda.min)
-	plot(QDA_ERROR)
-	print("KNN error minimale : ")
-	print(knn.min)
-	plot(KNN_ERROR)
-	print("TREE error minimale : ")
-	print(tree.min)
-	plot(TREE_ERROR)
-	print("BAYES error minimale : ")
-	print(bayes.min)
-	plot(BAYES_ERROR)
 
 	
 }
@@ -328,12 +301,24 @@ print("FDA + Regression logistique")
 print(phoneme.fda.glmnet.error)
 print("KNN")
 print(phoneme.knn.error)
+print("subset LDA :")
+print(mean(lda.min))
+print("subset QDA :")
+print(mean(qda.min))
+print("subset KNN :")
+print(mean(knn.min))
+print("subset TREE :")
+print(mean(tree.min))
+print("subset BAYES :")
+print(mean(bayes.min))
+
 
 # LDA : 0.06844741 0.07540984 0.04841402 0.06303237 0.07528642 mean : 0.06611801
 # QDA : 0.08347245 0.07377049 0.06677796 0.08006814 0.08346972 mean : 0.07751175
 # KNN : 0.08514190 0.07377049 0.06010017 0.08006814 0.07855974 mean : 0.07552809
 # TREE : 0.1402337 0.1491803 0.1101836 0.1362862 0.1243863 mean : 0.132054
 # BAYES : 0.10016694 0.09344262 0.06844741 0.09028961 0.08510638 mean : 0.08749059
+# GLMNET : mean : 10.57
 
 
 
@@ -350,9 +335,12 @@ print(phoneme.knn.error)
 # on lui applique le modele retenu
 # on teste sur notre ensmble de validation
 
+print("PERFORMANCE FINALE : ")
+
 cv.phoneme.lda <- lda(cv.phoneme.train.label~.,data=cv.phoneme.train.data)
 cv.phoneme.lda.pred <- predict(cv.phoneme.lda, newdata=cv.phoneme.validation.data)
 cv.phoneme.lda.perf <- table(cv.phoneme.validation.label,cv.phoneme.lda.pred$class)
 print((1 - sum(diag(cv.phoneme.lda.perf))/(nrow(cv.phoneme.validation.data))))
 cv.phoneme.lda.error <- (1 - sum(diag(cv.phoneme.lda.perf))/(nrow(cv.phoneme.validation.data)))
+
 
