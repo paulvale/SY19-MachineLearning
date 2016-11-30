@@ -13,7 +13,7 @@ plot(reg.fit,scale="bic")
 # As we can see in the warning message, we have a linear dependencie which mean that we have
 # some redundancy in our data
 
-# lcavol, lweight, lbph, svi
+# lcavol, lweight, lbph, svi Selectin des variables par la méthode du BIC
 prostate.bic = data.train
 prostate.bic$gleason = NULL
 prostate.bic$age = NULL
