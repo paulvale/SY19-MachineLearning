@@ -60,3 +60,5 @@ plot(1:30,evolutionTheta[,3], col="green", type="l", xlab="", ylab="", ylim=c(0,
 # initialement pour creer cette variable ou voulons nous chercher qquechose de totalement different
 
 persp3d(c(1:29), c(1:99), evolutionY, col="skyblue")
+
+# Pas compris la derniere question non plus 
