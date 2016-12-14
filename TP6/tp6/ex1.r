@@ -27,6 +27,10 @@ K <- 30
 evolutionTheta <- matrix(0, nrow=K, ncol=3)
 evolutionTheta[1,]<- c(0.2,0.8,0.3)
 evolutionY <- matrix(0,nrow=K-1, ncol=99)
+evolutionLog <- matrix(0, nrow=1, ncol=99)
+
+oldValue <- 1000
+newValue <- 0
 
 for (i in 2:K){
   # E step :
@@ -45,20 +49,17 @@ for (i in 2:K){
   # M step :
   evolutionTheta[i,1] <- sum(y*myData)/sum(y)                 # mu
   evolutionTheta[i,2] <- sqrt((sum(y*(myData-evolutionTheta[i,1])^2))/sum(y))  # sigma
-  evolutionTheta[i,3] <- mean(y)                              # pi
+  evolutionTheta[i,3] <- mean(y)   # pi
+  
+  # L(theta)
+  newValue <- sum(log(evolutionTheta[i,3]*dnorm(myData,mean = evolutionTheta[i,1], sd = evolutionTheta[i,2], log = FALSE))+(1-evolutionTheta[i,3])*(1/(2*a)))
+  print(abs(newValue - oldValue))
+  oldValue <- newValue
 }
-plot(1:30,evolutionTheta[,1], type="l",ylim=c(0,3))
+plot(1:30,evolutionTheta[,1], type="l",ylim=c(0,3)) # noir = mu 
 par(new=TRUE)
-plot(1:30,evolutionTheta[,2], col="red", type="l" , xlab="", ylab="", ylim=c(0,3))
+plot(1:30,evolutionTheta[,2], col="red", type="l" , xlab="", ylab="", ylim=c(0,3)) # rouge = sigma
 par(new=TRUE)
-plot(1:30,evolutionTheta[,3], col="green", type="l", xlab="", ylab="", ylim=c(0,3))
+plot(1:30,evolutionTheta[,3], col="green", type="l", xlab="", ylab="", ylim=c(0,3)) # pi = vert 
 
-# Meme pas compris ce que l'on cherchait a faire ici
-# on genere une variable X qui est un ensemble entre loi uniforme et normale 
-# mais que recherche t on via l'algorithme EM ?
-# Est ce que l'on veut retrouver les differents parametres theta que l'on a utilise 
-# initialement pour creer cette variable ou voulons nous chercher qquechose de totalement different
-
-persp3d(c(1:29), c(1:99), evolutionY, col="skyblue")
-
-# Pas compris la derniere question non plus 
+#persp3d(c(1:29), c(1:99), evolutionY, col="skyblue")
