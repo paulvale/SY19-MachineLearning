@@ -1,0 +1,5 @@
+acp.X <- prcomp(X)
+plot(acp.X)
+print(acp.X$sdev)
+print("===")
+print(100 * acp.X$sdev^2 / sum(acp.X$sdev^2))
