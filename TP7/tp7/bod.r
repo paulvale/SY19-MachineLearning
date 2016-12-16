@@ -1,9 +1,10 @@
 # LOAD PACKAGES 
 # =============
+rm(list=ls())
 load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/data/data_expressions.RData")
-library(fda)
 library(MASS)
 library(leaps)
+library(corrplot)
 
 X.dim <- dim(X)
 
@@ -68,18 +69,17 @@ X.app.dim <- dim(X.app)
 # 1) FDA
 X.lda <- lda(y.app~., data=as.data.frame(X.app))
 X.lda.prop = cumsum(X.lda$svd^2/sum(X.lda$svd^2))
-print("LDA Cumule")
-print(X.lda.prop)
+# print("LDA Cumule")
+# print(X.lda.prop)
 
 X.lda.transform <- X.app%*%X.lda$scaling
-pairs(~.,data=X.lda.transform, col=y.app, main="Simple Scatterplot Matrix")
 
 # 2) ACP
 X.acp <- prcomp(X.app)
-plot(X.acp)
+# plot(X.acp)
 acp.sum <- cumsum(100 * X.acp$sdev^2 / sum(X.acp$sdev^2))
-print("ACP Cumule")
-plot(acp.sum)
+# print("ACP Cumule")
+#plot(acp.sum, xlab="number of principal components", ylab="Total of variance explaines", main="ACP Cumule")
 
 X.acp.transform1 <- X.acp$x[,which(acp.sum<75)]
 X.acp.transform2 <- X.acp$x[,which(acp.sum<85)]
@@ -90,7 +90,6 @@ X.acp.transform2 <- X.acp$x[,which(acp.sum<85)]
 # and so is the only viable subset method when p is very large.
 # ==> Only Forward Selection
 reg.fit<-regsubsets(y.app~.,data=as.data.frame(X.app),method="forward",nvmax=50)
-# plot(reg.fit,scale="r2")
 
 tmp <- which(reg.fit$rss > 50)
 ind <- tmp[length(tmp)]
@@ -116,11 +115,37 @@ X.lda.transform.test <- X.test%*%X.lda$scaling
 # 2) ACP
 X.acp.test <- X.test %*% X.acp$rotation
 
-X.acp.transform1 <- X.acp.test[,which(acp.sum<75)]
-X.acp.transform2 <- X.acp.test[,which(acp.sum<85)]
+X.acp.test.transform1 <- X.acp.test[,which(acp.sum<75)]
+X.acp.test.transform2 <- X.acp.test[,which(acp.sum<85)]
 
 # 3) Forward/Backward Selection
 X.forward.test <- X.test[,which(reg.fit$vorder < ind)]
+
+
+## ===
+## VISUALISATION DES DONNEES
+## ===
+
+# 1) FDA
+pairs(~.,data=X.lda.transform, col=y.app, main="LDA Data")
+par(mfrow = c(1, 1))
+boxplot(X.lda.transform[,1]~y.app, main="LDA Data", 
+        xlab="LD1 value", ylab="faces expression value")
+
+# 2) ACP
+pairs(~.,data=X.acp.transform1[,1:5], col=y.app, main="ACP Data 1 (seuil de 75)")
+pairs(~.,data=X.acp.transform2[,1:5], col=y.app, main="ACP Data 2 (seuil de 85)")
+par(mfrow = c(1, 1))
+boxplot(X.acp.transform1[,1]~y.app, main="ACP Data", 
+        xlab="PC1 value", ylab="faces expression value")
+
+# 3) Forward Selection
+pairs(~.,data=X.forward[,1:5], col=y.app, main="Forward Selection Data")
+X.forward.cor <- cor(X.forward)
+par(mfrow = c(1, 1))
+corrplot(X.forward.cor, type="lower", tl.cex = 0.6)
+boxplot(X.forward[,1]~y.app, main="Forward Selection Data", 
+        xlab="Forward1 value", ylab="faces expression value")
 
 
 
