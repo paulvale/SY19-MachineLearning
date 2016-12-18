@@ -8,6 +8,7 @@ library(corrplot)
 library(randomForest)
 library(ROCR)
 
+
 X.dim <- dim(X)
 
 # reduction des variables dont les colonnes sont toujours egales a 0 
@@ -354,7 +355,3 @@ plot(vectorTree,rF.forward.precision.test,col="green", type="l", ylim=c(min,max)
 #             test : 45%
 
 # ===> Notre meilleur modele c'est le LDA pour le moment avec les random forests
-
-## ===
-## Random Forest
-## ===
