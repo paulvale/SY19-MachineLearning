@@ -103,62 +103,58 @@ X.forward.test <- X.test[,which(reg.fit$vorder < ind)]
 # ===
 K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
-lda.acpF.error <- 0
-lda.acp1.error <- 0
-lda.acp2.error <- 0
-lda.lda.error <- 0
-lda.forward.error <- 0
+qda.acpF.error <- 0
+qda.acp1.error <- 0
+qda.acp2.error <- 0
+qda.lda.error <- 0
+qda.forward.error <- 0
 
 for(i in 1:K){
   numberTest <- dim(X.acp.transform1[folds==i,])[1]
+  print("i")
 
   # ACP Full
-  lda.acpF <- lda(y.app[folds!=i]~., data=as.data.frame(X.acp.full[folds!=i,]))
-  lda.acpF.pred <- predict(lda.acpF,newdata=as.data.frame(X.acp.full[folds==i,]))
-  lda.acpF.perf <- table(y.app[folds==i],lda.acpF.pred$class)
-  lda.acpF.error <-lda.acpF.error + 1 - sum(diag(lda.acpF.perf))/numberTest
-  
+  qda.acpF <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.full[folds!=i,]))
+  qda.acpF.pred <- predict(qda.acpF,newdata=as.data.frame(X.acp.full[folds==i,]))
+  qda.acpF.perf <- table(y.app[folds==i],qda.acpF.pred$class)
+  qda.acpF.error <-qda.acpF.error + 1 - sum(diag(qda.acpF.perf))/numberTest
+  print("i")
   # ACP 1
-  lda.acp1 <- lda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform1[folds!=i,]))
-  lda.acp1.pred <- predict(lda.acp1,newdata=as.data.frame(X.acp.transform1[folds==i,]))
-  lda.acp1.perf <- table(y.app[folds==i],lda.acp1.pred$class)
-  lda.acp1.error <-lda.acp1.error + 1 - sum(diag(lda.acp1.perf))/numberTest
-
+  qda.acp1 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform1[folds!=i,]))
+  qda.acp1.pred <- predict(qda.acp1,newdata=as.data.frame(X.acp.transform1[folds==i,]))
+  qda.acp1.perf <- table(y.app[folds==i],qda.acp1.pred$class)
+  qda.acp1.error <-qda.acp1.error + 1 - sum(diag(qda.acp1.perf))/numberTest
+  print("i")
   # ACP 2
-  lda.acp2 <- lda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
-  lda.acp2.pred <- predict(lda.acp1,newdata=as.data.frame(X.acp.transform2[folds==i,]))
-  lda.acp2.perf <- table(y.app[folds==i],lda.acp2.pred$class)
-  lda.acp2.error <-lda.acp2.error + 1 - sum(diag(lda.acp2.perf))/numberTest
-
+  qda.acp2 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
+  qda.acp2.pred <- predict(qda.acp1,newdata=as.data.frame(X.acp.transform2[folds==i,]))
+  qda.acp2.perf <- table(y.app[folds==i],qda.acp2.pred$class)
+  qda.acp2.error <-qda.acp2.error + 1 - sum(diag(qda.acp2.perf))/numberTest
+  print("i")
   # FDA
-  lda.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.lda.transform[folds!=i,]))
-  lda.lda.pred <- predict(lda.lda,newdata=as.data.frame(X.lda.transform[folds==i,]))
-  lda.lda.perf <- table(y.app[folds==i],lda.lda.pred$class)
-  lda.lda.error <-lda.lda.error + 1 - sum(diag(lda.lda.perf))/numberTest
-
+  qda.lda <- qda(y.app[folds!=i]~., data=as.data.frame(X.lda.transform[folds!=i,]))
+  qda.lda.pred <- predict(qda.lda,newdata=as.data.frame(X.lda.transform[folds==i,]))
+  qda.lda.perf <- table(y.app[folds==i],qda.lda.pred$class)
+  qda.lda.error <-qda.lda.error + 1 - sum(diag(qda.lda.perf))/numberTest
+  print("i")
   # Forward
-  lda.forward <- lda(y.app[folds!=i]~., data=as.data.frame(X.forward[folds!=i,]))
-  lda.forward.pred <- predict(lda.forward,newdata=as.data.frame(X.forward[folds==i,]))
-  lda.forward.perf <- table(y.app[folds==i],lda.forward.pred$class)
-  lda.forward.error <-lda.forward.error + 1 - sum(diag(lda.forward.perf))/numberTest
+  qda.forward <- qda(y.app[folds!=i]~., data=as.data.frame(X.forward[folds!=i,]))
+  qda.forward.pred <- predict(qda.forward,newdata=as.data.frame(X.forward[folds==i,]))
+  qda.forward.perf <- table(y.app[folds==i],qda.forward.pred$class)
+  qda.forward.error <-qda.forward.error + 1 - sum(diag(qda.forward.perf))/numberTest
 }
 
 # Diviser le taux d'erreur par le nombre de K 
-lda.acpF.error <-(lda.acpF.error/K)*100
-lda.acp1.error <-(lda.acp1.error/K)*100
-lda.acp2.error <-(lda.acp2.error/K)*100
-lda.lda.error <-(lda.lda.error/K)*100
-lda.forward.error <-(lda.forward.error/K)*100
+qda.acpF.error <-(qda.acpF.error/K)*100
+qda.acp1.error <-(qda.acp1.error/K)*100
+qda.acp2.error <-(qda.acp2.error/K)*100
+qda.lda.error <-(qda.lda.error/K)*100
+qda.forward.error <-(qda.forward.error/K)*100
 
-print(lda.acpF.error)
-print(lda.acp1.error)
-print(lda.acp2.error)
-print(lda.lda.error)
-print(lda.forward.error)
+print(qda.acpF.error)
+print(qda.acp1.error)
+print(qda.acp2.error)
+print(qda.lda.error)
+print(qda.forward.error)
 
-#Obersavtion :
-# Pour le lda Full je n'ai pas pu tout mettre 
-# j'obetnais une erreur me disant que les dernieres colonnes etaient constantes
-# donc ca ne fonctionnait pas
-# j'ai pris jusqu'a 166 du coup qui correspond ici au max que l'on peut avoir 
 
