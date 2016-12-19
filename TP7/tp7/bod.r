@@ -84,6 +84,7 @@ acp.sum <- cumsum(100 * X.acp$sdev^2 / sum(X.acp$sdev^2))
 # print("ACP Cumule")
 #plot(acp.sum, xlab="number of principal components", ylab="Total of variance explaines", main="ACP Cumule")
 
+X.acp.full <- X.acp$x 
 X.acp.transform1 <- X.acp$x[,which(acp.sum<75)]
 X.acp.transform2 <- X.acp$x[,which(acp.sum<85)]
 
@@ -118,6 +119,7 @@ X.lda.transform.test <- X.test%*%X.lda$scaling
 # 2) ACP
 X.acp.test <- X.test %*% X.acp$rotation
 
+X.acp.test.full <- X.acp.test
 X.acp.test.transform1 <- X.acp.test[,which(acp.sum<75)]
 X.acp.test.transform2 <- X.acp.test[,which(acp.sum<85)]
 
@@ -154,6 +156,21 @@ boxplot(X.forward[,1]~y.app, main="Forward Selection Data",
 ## ===
 # calcul des taux d'erreur
 vectorTree <- seq(100,1500,100)
+
+# ===
+# acpFull
+# ===
+# err
+rF.acpF.tauxErreur.test <- rep(0,length(vectorTree))
+rF.acpF.tauxErreur.app <- rep(0,length(vectorTree))
+
+# precision
+rF.acpF.precision.test <- rep(0,length(vectorTree))
+rF.acpF.precision.app <- rep(0,length(vectorTree))
+
+# rappel
+rF.acpF.rappel.test <- rep(0,length(vectorTree))
+rF.acpF.rappel.app <- rep(0,length(vectorTree))
 
 # ===
 # acp1
@@ -218,6 +235,10 @@ rF.lda.rappel.app <- rep(0,length(vectorTree))
 
 for(i in vectorTree) {
   print(i)
+  rF.acpF <- randomForest(factor(y.app)~., data=as.data.frame(X.acp.full), xtest=as.data.frame(X.acp.test.full), ytest=factor(y.test), ntree=i)
+  #print("ACP Full RandomForest :")
+  #print(rF.acpF$test$confusion)
+  
   rF.acp1 <- randomForest(factor(y.app)~., data=as.data.frame(X.acp.transform1), xtest=as.data.frame(X.acp.test.transform1), ytest=factor(y.test), ntree=i)
   #print("ACP1 RandomForest :")
   #print(rF.acp1$test$confusion)
@@ -235,11 +256,13 @@ for(i in vectorTree) {
   #print(rF.forward$test$confusion)
   
   # Calcul des taux d'erreurs
+  rF.acpF.tauxErreur.test[i/100] <- 1 - (sum(diag(rF.acpF$test$confusion)/X.test.dim[1]))
   rF.acp1.tauxErreur.test[i/100] <- 1 - (sum(diag(rF.acp1$test$confusion)/X.test.dim[1]))
   rF.acp2.tauxErreur.test[i/100] <- 1 - (sum(diag(rF.acp2$test$confusion)/X.test.dim[1]))
   rF.lda.tauxErreur.test[i/100] <- 1 - (sum(diag(rF.lda$test$confusion)/X.test.dim[1]))
   rF.forward.tauxErreur.test[i/100] <- 1 - (sum(diag(rF.forward$test$confusion)/X.test.dim[1]))
   
+  rF.acpF.tauxErreur.app[i/100] <- 1 - (sum(diag(rF.acpF$confusion)/X.app.dim[1]))
   rF.acp1.tauxErreur.app[i/100] <- 1 - (sum(diag(rF.acp1$confusion)/X.app.dim[1]))
   rF.acp2.tauxErreur.app[i/100] <- 1 - (sum(diag(rF.acp2$confusion)/X.app.dim[1]))
   rF.lda.tauxErreur.app[i/100] <- 1 - (sum(diag(rF.lda$confusion)/X.app.dim[1]))
@@ -247,11 +270,13 @@ for(i in vectorTree) {
   
   for( j in 1:6){
     # Calcul de la precision
+    rF.acpF.precision.test[i/100] <- rF.acpF.precision.test[i/100] + if(sum(rF.acpF$test$confusion[,j]) == 0) 0 else (rF.acpF$test$confusion[j,j]/sum(rF.acpF$test$confusion[,j]))
     rF.acp1.precision.test[i/100] <- rF.acp1.precision.test[i/100] + if(sum(rF.acp1$test$confusion[,j]) == 0) 0 else (rF.acp1$test$confusion[j,j]/sum(rF.acp1$test$confusion[,j]))
     rF.acp2.precision.test[i/100] <- rF.acp2.precision.test[i/100] + if(sum(rF.acp2$test$confusion[,j]) == 0) 0 else (rF.acp2$test$confusion[j,j]/sum(rF.acp2$test$confusion[,j]))
     rF.lda.precision.test[i/100] <- rF.lda.precision.test[i/100] + if(sum(rF.lda$test$confusion[,j]) == 0) 0 else (rF.lda$test$confusion[j,j]/sum(rF.lda$test$confusion[,j]))
     rF.forward.precision.test[i/100] <- rF.forward.precision.test[i/100] + if(sum(rF.forward$test$confusion[,j]) == 0) 0 else (rF.forward$test$confusion[j,j]/sum(rF.forward$test$confusion[,j]))
-    
+
+    rF.acpF.precision.app[i/100] <- rF.acpF.precision.app[i/100] + if(sum(rF.acpF$confusion[,j]) == 0) 0 else (rF.acpF$confusion[j,j]/sum(rF.acpF$confusion[,j]))
     rF.acp1.precision.app[i/100] <- rF.acp1.precision.app[i/100] + if(sum(rF.acp1$confusion[,j]) == 0) 0 else (rF.acp1$confusion[j,j]/sum(rF.acp1$confusion[,j]))
     rF.acp2.precision.app[i/100] <- rF.acp2.precision.app[i/100] + if(sum(rF.acp2$confusion[,j]) == 0) 0 else (rF.acp2$confusion[j,j]/sum(rF.acp2$confusion[,j]))
     rF.lda.precision.app[i/100] <- rF.lda.precision.app[i/100] + if(sum(rF.lda$confusion[,j]) == 0) 0 else (rF.lda$confusion[j,j]/sum(rF.lda$confusion[,j]))
@@ -259,11 +284,13 @@ for(i in vectorTree) {
     
     # Calcul du rappel
   }
+  rF.acpF.precision.test[i/100] <- (rF.acpF.precision.test[i/100]/6)*100
   rF.acp1.precision.test[i/100] <- (rF.acp1.precision.test[i/100]/6)*100
   rF.acp2.precision.test[i/100] <- (rF.acp2.precision.test[i/100]/6)*100
   rF.lda.precision.test[i/100] <- (rF.lda.precision.test[i/100]/6)*100
   rF.forward.precision.test[i/100] <- (rF.forward.precision.test[i/100]/6)*100
   
+  rF.acpF.precision.app[i/100] <- (rF.acpF.precision.app[i/100]/6)*100
   rF.acp1.precision.app[i/100] <- (rF.acp1.precision.app[i/100]/6)*100
   rF.acp2.precision.app[i/100] <- (rF.acp2.precision.app[i/100]/6)*100
   rF.lda.precision.app[i/100] <- (rF.lda.precision.app[i/100]/6)*100
@@ -275,6 +302,14 @@ for(i in vectorTree) {
 # ===
 
 # Taux d'erreur
+# acp full
+min <- min(c(rF.acpF.tauxErreur.app, rF.acpF.tauxErreur.test))
+max <- max(c(rF.acpF.tauxErreur.app, rF.acpF.tauxErreur.test))
+plot(vectorTree,rF.acpF.tauxErreur.app,type="l",col="red", ylim=c(min,max), ylab="")
+par(new=TRUE)
+plot(vectorTree,rF.acpF.tauxErreur.test,col="green", type="l", ylim=c(min,max), ylab="taux d'erreur", main="Taux erreur ACP Full")
+
+
 # acp1
 min <- min(c(rF.acp1.tauxErreur.app, rF.acp1.tauxErreur.test))
 max <- max(c(rF.acp1.tauxErreur.app, rF.acp1.tauxErreur.test))
@@ -305,6 +340,14 @@ plot(vectorTree,rF.forward.tauxErreur.test,col="green", type="l", ylim=c(min,max
 
 
 # Precision
+# acp full
+min <- min(c(rF.acpF.precision.app, rF.acpF.precision.test))
+max <- max(c(rF.acpF.precision.app, rF.acpF.precision.test))
+plot(vectorTree,rF.acpF.precision.app,type="l",col="red", ylim=c(min,max), ylab="")
+par(new=TRUE)
+plot(vectorTree,rF.acpF.precision.test,col="green", type="l", ylim=c(min,max), ylab="%", main="Precision ACP Full")
+
+
 # acp1
 min <- min(c(rF.acp1.precision.app, rF.acp1.precision.test))
 max <- max(c(rF.acp1.precision.app, rF.acp1.precision.test))
