@@ -126,7 +126,7 @@ for(i in 1:K){
 
   # ACP 2
   lda.acp2 <- lda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
-  lda.acp2.pred <- predict(lda.acp1,newdata=as.data.frame(X.acp.transform2[folds==i,]))
+  lda.acp2.pred <- predict(lda.acp2,newdata=as.data.frame(X.acp.transform2[folds==i,]))
   lda.acp2.perf <- table(y.app[folds==i],lda.acp2.pred$class)
   lda.acp2.error <-lda.acp2.error + 1 - sum(diag(lda.acp2.perf))/numberTest
 

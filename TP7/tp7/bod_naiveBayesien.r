@@ -99,62 +99,64 @@ X.forward.test <- X.test[,which(reg.fit$vorder < ind)]
 
 
 # ===
-# Quadratic Discriminant Analysis
+# Naive Bayesien Analysis
 # ===
 K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
-qda.acpF.error <- 0
-qda.acp1.error <- 0
-qda.acp2.error <- 0
-qda.lda.error <- 0
-qda.forward.error <- 0
+nb.acpF.error <- 0
+nb.acp1.error <- 0
+nb.acp2.error <- 0
+nb.lda.error <- 0
+nb.forward.error <- 0
+
+# Attention
+y.app <- factor(y.app)
+y.test <- factor(y.test)
 
 for(i in 1:K){
   numberTest <- dim(X.acp.transform1[folds==i,])[1]
-  print("i")
-
+  
   # ACP Full
-  qda.acpF <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.full[folds!=i,]))
-  qda.acpF.pred <- predict(qda.acpF,newdata=as.data.frame(X.acp.full[folds==i,]))
-  qda.acpF.perf <- table(y.app[folds==i],qda.acpF.pred$class)
-  qda.acpF.error <-qda.acpF.error + 1 - sum(diag(qda.acpF.perf))/numberTest
-  print("i")
+  nb.acpF <- naiveBayes(y.app[folds!=i]~., data=as.data.frame(X.acp.full[folds!=i,]))
+  nb.acpF.pred <- predict(nb.acpF,newdata=as.data.frame(X.acp.full[folds==i,]))
+  nb.acpF.perf <- table(y.app[folds==i],nb.acpF.pred)
+  nb.acpF.error <-nb.acpF.error + 1 - sum(diag(nb.acpF.perf))/numberTest
+  
   # ACP 1
-  qda.acp1 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform1[folds!=i,]))
-  qda.acp1.pred <- predict(qda.acp1,newdata=as.data.frame(X.acp.transform1[folds==i,]))
-  qda.acp1.perf <- table(y.app[folds==i],qda.acp1.pred$class)
-  qda.acp1.error <-qda.acp1.error + 1 - sum(diag(qda.acp1.perf))/numberTest
-  print("i")
+  nb.acp1 <- naiveBayes(y.app[folds!=i]~., data=as.data.frame(X.acp.transform1[folds!=i,]))
+  nb.acp1.pred <- predict(nb.acp1,newdata=as.data.frame(X.acp.transform1[folds==i,]))
+  nb.acp1.perf <- table(y.app[folds==i],nb.acp1.pred)
+  nb.acp1.error <-nb.acp1.error + 1 - sum(diag(nb.acp1.perf))/numberTest
+  
   # ACP 2
-  qda.acp2 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
-  qda.acp2.pred <- predict(qda.acp2,newdata=as.data.frame(X.acp.transform2[folds==i,]))
-  qda.acp2.perf <- table(y.app[folds==i],qda.acp2.pred$class)
-  qda.acp2.error <-qda.acp2.error + 1 - sum(diag(qda.acp2.perf))/numberTest
-  print("i")
+  nb.acp2 <- naiveBayes(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
+  nb.acp2.pred <- predict(nb.acp2,newdata=as.data.frame(X.acp.transform2[folds==i,]))
+  nb.acp2.perf <- table(y.app[folds==i],nb.acp2.pred)
+  nb.acp2.error <-nb.acp2.error + 1 - sum(diag(nb.acp2.perf))/numberTest
+  
   # FDA
-  qda.lda <- qda(y.app[folds!=i]~., data=as.data.frame(X.lda.transform[folds!=i,]))
-  qda.lda.pred <- predict(qda.lda,newdata=as.data.frame(X.lda.transform[folds==i,]))
-  qda.lda.perf <- table(y.app[folds==i],qda.lda.pred$class)
-  qda.lda.error <-qda.lda.error + 1 - sum(diag(qda.lda.perf))/numberTest
-  print("i")
+  nb.lda <- naiveBayes(y.app[folds!=i]~., data=as.data.frame(X.lda.transform[folds!=i,]))
+  nb.lda.pred <- predict(nb.lda,newdata=as.data.frame(X.lda.transform[folds==i,]))
+  nb.lda.perf <- table(y.app[folds==i],nb.lda.pred)
+  nb.lda.error <-nb.lda.error + 1 - sum(diag(nb.lda.perf))/numberTest
+  
   # Forward
-  qda.forward <- qda(y.app[folds!=i]~., data=as.data.frame(X.forward[folds!=i,]))
-  qda.forward.pred <- predict(qda.forward,newdata=as.data.frame(X.forward[folds==i,]))
-  qda.forward.perf <- table(y.app[folds==i],qda.forward.pred$class)
-  qda.forward.error <-qda.forward.error + 1 - sum(diag(qda.forward.perf))/numberTest
+  nb.forward <- naiveBayes(y.app[folds!=i]~., data=as.data.frame(X.forward[folds!=i,]))
+  nb.forward.pred <- predict(nb.forward,newdata=as.data.frame(X.forward[folds==i,]))
+  nb.forward.perf <- table(y.app[folds==i],nb.forward.pred)
+  nb.forward.error <-nb.forward.error + 1 - sum(diag(nb.forward.perf))/numberTest
 }
 
 # Diviser le taux d'erreur par le nombre de K 
-qda.acpF.error <-(qda.acpF.error/K)*100
-qda.acp1.error <-(qda.acp1.error/K)*100
-qda.acp2.error <-(qda.acp2.error/K)*100
-qda.lda.error <-(qda.lda.error/K)*100
-qda.forward.error <-(qda.forward.error/K)*100
+nb.acpF.error <-(nb.acpF.error/K)*100
+nb.acp1.error <-(nb.acp1.error/K)*100
+nb.acp2.error <-(nb.acp2.error/K)*100
+nb.lda.error <-(nb.lda.error/K)*100
+nb.forward.error <-(nb.forward.error/K)*100
 
-print(qda.acpF.error)
-print(qda.acp1.error)
-print(qda.acp2.error)
-print(qda.lda.error)
-print(qda.forward.error)
-
+print(nb.acpF.error)
+print(nb.acp1.error)
+print(nb.acp2.error)
+print(nb.lda.error)
+print(nb.forward.error)
 
