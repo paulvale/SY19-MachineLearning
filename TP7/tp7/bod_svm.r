@@ -68,6 +68,7 @@ X.lda.transform <- X.app%*%X.lda$scaling
 X.acp <- prcomp(X.app)
 acp.sum <- cumsum(100 * X.acp$sdev^2 / sum(X.acp$sdev^2))
 
+X.acp.full <- X.acp$x
 X.acp.transform1 <- X.acp$x[,which(acp.sum<75)]
 X.acp.transform2 <- X.acp$x[,which(acp.sum<85)]
 
@@ -89,6 +90,7 @@ X.lda.transform.test <- X.test%*%X.lda$scaling
 # 2) ACP
 X.acp.test <- X.test %*% X.acp$rotation
 
+X.acp.test.full <- X.acp.test
 X.acp.test.transform1 <- X.acp.test[,which(acp.sum<75)]
 X.acp.test.transform2 <- X.acp.test[,which(acp.sum<85)]
 
@@ -99,23 +101,28 @@ X.forward.test <- X.test[,which(reg.fit$vorder < ind)]
 # SVM 
 # ===
 # models
+svm.acpF <- svm(X.acp.full,y.app,type="C-classification")
 svm.acp1 <- svm(X.acp.transform1,y.app,type="C-classification")
 svm.acp2 <- svm(X.acp.transform2,y.app,type="C-classification")
 svm.lda <- svm(X.lda.transform,y.app, type="C-classification")
 svm.forward <- svm(X.forward,y.app, type="C-classification")
+
 # prediction
+svm.acpF.prediction <- predict(svm.acpF, X.acp.test.full)
 svm.acp1.prediction <- predict(svm.acp1, X.acp.test.transform1)
 svm.acp2.prediction <- predict(svm.acp2, X.acp.test.transform2)
 svm.lda.prediction <- predict(svm.lda, X.lda.transform.test)
 svm.forward.prediction <- predict(svm.forward, X.forward.test)
 
 # matrice de confusion
+svm.acpF.confusion <- table(y.test, svm.acpF.prediction)
 svm.acp1.confusion <- table(y.test, svm.acp1.prediction)
 svm.acp2.confusion <- table(y.test, svm.acp2.prediction)
 svm.lda.confusion <- table(y.test, svm.lda.prediction)
 svm.forward.confusion <- table(y.test, svm.forward.prediction)
 
 # perform a grid search
+svm.acpF.tuneResult <- tune(svm.acpF, train.y = y.app,  train.x = X.acp.full, ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
 svm.acp1.tuneResult <- tune(svm.acp1, train.y = y.app,  train.x = X.acp.transform1,ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
 svm.acp2.tuneResult <- tune(svm.acp2, train.y = y.app,  train.x = X.acp.transform2, ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
 svm.lda.tuneResult <- tune(svm.lda, train.y = y.app,  train.x = X.lda.transform, ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
