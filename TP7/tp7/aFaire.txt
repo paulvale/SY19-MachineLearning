@@ -1,5 +1,5 @@
 lda            = OK
-qda            = normal on ne peut pas depasser 29
+qda            = normal on ne peut pas depasser 29 ( Au final meme 10 ca ne passe pas ! donc je prend jusqu'a 6 et au moins ca ne bug pas)
 knn            = OK
 tree           = OK
 nn             = A FAIRE
@@ -23,3 +23,13 @@ FDA => 5 variables
 ATTENTION :
 Le prof a dit que l'on devait faire une CV et que a l'interieur il fallait a chaque fois recalculer les subsets et pas juste les definir une fois car sinon c'est biaisé
 De plus au final au lieu de faire CPs par CPs, ce serait peu etre bien plus interessant de faire le forward dessus et de faire l'ajout un a un sur ce forward fait sur les CPs.
+
+
+
+=== RETOUR APREM ALGO 22/12 ===
+
+Au final je pense que lancer sur la forward selection ne sert vraiment a rien a part nous couter enormement de temps de calcul ! 
+Le prof a notamment dit en TD qu'il y avait enormement de redondances et de linearité entre differente variables
+Du coup je pense que le fait d'appuyer la dessus lors du rapport est largement suffisant 
+Par contre, la forward selection peut etre tres interessante a faire sur les ACPs que nous avons recu 
+et du coup il faudrait plutot faire une Forward selection sur les differentes variables que l'on a avec notre ACP

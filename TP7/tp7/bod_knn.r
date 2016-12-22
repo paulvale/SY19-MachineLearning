@@ -6,7 +6,6 @@ library(MASS)
 library(leaps)
 library(class)
 
-
 X.dim <- dim(X)
 
 # reduction des variables dont les colonnes sont toujours egales a 0 
