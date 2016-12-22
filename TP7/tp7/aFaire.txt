@@ -1,0 +1,25 @@
+lda            = OK
+qda            = normal on ne peut pas depasser 29
+knn            = OK
+tree           = OK
+nn             = A FAIRE
+bayesien       = OK
+reg log        = OK
+svm            = OK
+rF             = OK
+
+
+Jeux de données => 5 ( 3 CPs, 1 FDA, 1 forward)
+=>
+CPs : 1 a 174 variables => Genereer les 174 modeles 
+1 modele : 1cp
+2 modele : 2 1eres CPs ...
+
+FDA => 5 variables
+
+1 forward : 1 a ...
+
+
+ATTENTION :
+Le prof a dit que l'on devait faire une CV et que a l'interieur il fallait a chaque fois recalculer les subsets et pas juste les definir une fois car sinon c'est biaisé
+De plus au final au lieu de faire CPs par CPs, ce serait peu etre bien plus interessant de faire le forward dessus et de faire l'ajout un a un sur ce forward fait sur les CPs.

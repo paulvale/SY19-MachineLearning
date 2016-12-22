@@ -114,23 +114,23 @@ for(i in 1:K){
   print("i")
 
   # ACP Full
-  qda.acpF <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.full[folds!=i,]))
-  qda.acpF.pred <- predict(qda.acpF,newdata=as.data.frame(X.acp.full[folds==i,]))
-  qda.acpF.perf <- table(y.app[folds==i],qda.acpF.pred$class)
-  qda.acpF.error <-qda.acpF.error + 1 - sum(diag(qda.acpF.perf))/numberTest
-  print("i")
+  #qda.acpF <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.full[folds!=i,]))
+  #qda.acpF.pred <- predict(qda.acpF,newdata=as.data.frame(X.acp.full[folds==i,]))
+  #qda.acpF.perf <- table(y.app[folds==i],qda.acpF.pred$class)
+  #qda.acpF.error <-qda.acpF.error + 1 - sum(diag(qda.acpF.perf))/numberTest
+  #print("i")
   # ACP 1
-  qda.acp1 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform1[folds!=i,]))
-  qda.acp1.pred <- predict(qda.acp1,newdata=as.data.frame(X.acp.transform1[folds==i,]))
-  qda.acp1.perf <- table(y.app[folds==i],qda.acp1.pred$class)
-  qda.acp1.error <-qda.acp1.error + 1 - sum(diag(qda.acp1.perf))/numberTest
-  print("i")
+  #qda.acp1 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform1[folds!=i,]))
+  #qda.acp1.pred <- predict(qda.acp1,newdata=as.data.frame(X.acp.transform1[folds==i,]))
+  #qda.acp1.perf <- table(y.app[folds==i],qda.acp1.pred$class)
+  #qda.acp1.error <-qda.acp1.error + 1 - sum(diag(qda.acp1.perf))/numberTest
+  #print("i")
   # ACP 2
-  qda.acp2 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
-  qda.acp2.pred <- predict(qda.acp2,newdata=as.data.frame(X.acp.transform2[folds==i,]))
-  qda.acp2.perf <- table(y.app[folds==i],qda.acp2.pred$class)
-  qda.acp2.error <-qda.acp2.error + 1 - sum(diag(qda.acp2.perf))/numberTest
-  print("i")
+  #qda.acp2 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
+  #qda.acp2.pred <- predict(qda.acp2,newdata=as.data.frame(X.acp.transform2[folds==i,]))
+  #qda.acp2.perf <- table(y.app[folds==i],qda.acp2.pred$class)
+  #qda.acp2.error <-qda.acp2.error + 1 - sum(diag(qda.acp2.perf))/numberTest
+  #print("i")
   # FDA
   qda.lda <- qda(y.app[folds!=i]~., data=as.data.frame(X.lda.transform[folds!=i,]))
   qda.lda.pred <- predict(qda.lda,newdata=as.data.frame(X.lda.transform[folds==i,]))
@@ -138,10 +138,10 @@ for(i in 1:K){
   qda.lda.error <-qda.lda.error + 1 - sum(diag(qda.lda.perf))/numberTest
   print("i")
   # Forward
-  qda.forward <- qda(y.app[folds!=i]~., data=as.data.frame(X.forward[folds!=i,]))
-  qda.forward.pred <- predict(qda.forward,newdata=as.data.frame(X.forward[folds==i,]))
-  qda.forward.perf <- table(y.app[folds==i],qda.forward.pred$class)
-  qda.forward.error <-qda.forward.error + 1 - sum(diag(qda.forward.perf))/numberTest
+  #qda.forward <- qda(y.app[folds!=i]~., data=as.data.frame(X.forward[folds!=i,]))
+  #qda.forward.pred <- predict(qda.forward,newdata=as.data.frame(X.forward[folds==i,]))
+  #qda.forward.perf <- table(y.app[folds==i],qda.forward.pred$class)
+  #qda.forward.error <-qda.forward.error + 1 - sum(diag(qda.forward.perf))/numberTest
 }
 
 # Diviser le taux d'erreur par le nombre de K 

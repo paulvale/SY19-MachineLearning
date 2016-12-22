@@ -79,10 +79,10 @@ X.lda.transform <- X.app%*%X.lda$scaling
 
 # 2) ACP
 X.acp <- prcomp(X.app)
-# plot(X.acp)
+plot(X.acp)
 acp.sum <- cumsum(100 * X.acp$sdev^2 / sum(X.acp$sdev^2))
-# print("ACP Cumule")
-#plot(acp.sum, xlab="number of principal components", ylab="Total of variance explaines", main="ACP Cumule")
+ print("ACP Cumule")
+plot(acp.sum, xlab="number of principal components", ylab="Total of variance explained", main="ACP Cumule")
 
 X.acp.full <- X.acp$x 
 X.acp.transform1 <- X.acp$x[,which(acp.sum<75)]
