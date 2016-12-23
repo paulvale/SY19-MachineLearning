@@ -7,6 +7,7 @@ library(leaps)
 library(glmnet)
 library(class)
 library(e1071)
+library(tree)
 
 X.dim <- dim(X)
 
@@ -56,6 +57,18 @@ K <- 2 # Nombre de sections dans notre ensemble d'apprentissage
 numberKnn <- 40
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
 
+tree.acp.error <- rep(0,159)
+tree.lda.error <- 0
+tree.forward.error <- rep(0, X.app.dim[2])
+
+svm.acp.error <- rep(0,159)
+svm.lda.error <- 0
+svm.forward.error <- rep(0, X.app.dim[2])
+
+svm.tune.acp.error <- rep(0,159)
+svm.tune.lda.error <- 0
+svm.tune.forward.error <- rep(0, X.app.dim[2])
+
 nb.acp.error <- rep(0,159)
 nb.lda.error <- 0
 nb.forward.error <- rep(0, X.app.dim[2])
@@ -99,36 +112,54 @@ for(i in 1:K){
   # ===
   for(j in 2:160){
     # LDA
-    lda.acp <- lda(y.app[folds!=i]~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
-    lda.acp.pred <- predict(lda.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
-    lda.acp.perf <- table(y.app[folds==i],lda.acp.pred$class)
-    lda.acp.error[j-1] <-lda.acp.error[j-1] + 1 - sum(diag(lda.acp.perf))/numberTest
+    #lda.acp <- lda(y.app[folds!=i]~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
+    #lda.acp.pred <- predict(lda.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
+    #lda.acp.perf <- table(y.app[folds==i],lda.acp.pred$class)
+    #lda.acp.error[j-1] <-lda.acp.error[j-1] + 1 - sum(diag(lda.acp.perf))/numberTest
     
     # KNN
-    for(number in 1:numberKnn){
+    #for(number in 1:numberKnn){
       # ACP Full
-      knn.acp <- knn(as.data.frame(X.acp.data[folds!=i,1:j]), as.data.frame(X.acp.data[folds==i,1:j]), y.app[folds!=i],k=number)
-      knn.acp.perf <- table(y.app[folds==i], knn.acp)
-      knn.acp.error[number,j-1] <-knn.acp.error[number,j-1]  + 1 - sum(diag(knn.acp.perf))/numberTest
-    }
+     # knn.acp <- knn(as.data.frame(X.acp.data[folds!=i,1:j]), as.data.frame(X.acp.data[folds==i,1:j]), y.app[folds!=i],k=number)
+     #  knn.acp.perf <- table(y.app[folds==i], knn.acp)
+    #  knn.acp.error[number,j-1] <-knn.acp.error[number,j-1]  + 1 - sum(diag(knn.acp.perf))/numberTest
+    #}
     
     # LogReg
-    logReg.acp.res<-c(rep(0,numberTest))
-    logReg.acp <- glmnet(X.acp.data[folds!=i,1:j] ,y=y.app[folds!=i],family="multinomial")
-    logReg.acp.pred <- predict(logReg.acp,newx=X.acp.data[folds==i,1:j],type="response",s=logReg.acp$lambda.min)
+    #logReg.acp.res<-c(rep(0,numberTest))
+    #logReg.acp <- glmnet(X.acp.data[folds!=i,1:j] ,y=y.app[folds!=i],family="multinomial")
+    #logReg.acp.pred <- predict(logReg.acp,newx=X.acp.data[folds==i,1:j],type="response",s=logReg.acp$lambda.min)
     
-    for (h in 1:numberTest) {
-      logReg.acp.res[h] <-which.max(logReg.acp.pred[h,1:6,dim(logReg.acp.pred)[3]])
-    }
+    #for (h in 1:numberTest) {
+     # logReg.acp.res[h] <-which.max(logReg.acp.pred[h,1:6,dim(logReg.acp.pred)[3]])
+    #}
     
-    logReg.acp.perf <- table(y.app[folds==i],logReg.acp.res)
-    logReg.acp.error[j-1] <-logReg.acp.error[j-1] + 1 - sum(diag(logReg.acp.perf))/numberTest
+    #logReg.acp.perf <- table(y.app[folds==i],logReg.acp.res)
+    #logReg.acp.error[j-1] <-logReg.acp.error[j-1] + 1 - sum(diag(logReg.acp.perf))/numberTest
     
     # Naive Baeysien
-    nb.acp <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
-    nb.acp.pred <- predict(nb.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
-    nb.acp.perf <- table(factor(y.app[folds==i]),nb.acp.pred)
-    nb.acp.error[j-1] <-nb.acp.error[j-1] + 1 - sum(diag(nb.acp.perf))/numberTest
+    #nb.acp <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
+    #nb.acp.pred <- predict(nb.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
+    #nb.acp.perf <- table(factor(y.app[folds==i]),nb.acp.pred)
+    #nb.acp.error[j-1] <-nb.acp.error[j-1] + 1 - sum(diag(nb.acp.perf))/numberTest
+    
+    # SVM
+    #svm.acp <- svm(X.acp.data[folds!=i,1:j],y.app[folds!=i],type="C-classification")
+    #svm.acp.pred <- predict(svm.acp, X.acp.data[folds==i,1:j])
+    #svm.acp.perf <- table(factor(y.app[folds==i]),svm.acp.pred)
+    #svm.acp.error[j-1] <-svm.acp.error[j-1] + 1 - sum(diag(svm.acp.perf))/numberTest
+    
+    # SVM Tune 
+    #svm.tune.acp <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.acp.data[folds!=i,1:j], ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+    #svm.tune.acp.pred <- predict(svm.tune.acp$best.model, X.acp.data[folds==i,1:j])
+    #svm.tune.acp.perf <- table(factor(y.app[folds==i]),svm.tune.acp.pred)
+    #svm.tune.acp.error[j-1] <-svm.tune.acp.error[j-1] + 1 - sum(diag(svm.tune.acp.perf))/numberTest
+    
+    # Tree
+    tree.acp <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
+    tree.acp.pred <- predict(tree.acp,as.data.frame(X.acp.data[folds==i,1:j]), type="class")
+    tree.acp.perf <- table(y.app[folds==i],tree.acp.pred)
+    tree.acp.error[j-1] <-tree.acp.error[j-1] + 1 - sum(diag(tree.acp.perf))/numberTest
   }
   
   # ===
@@ -154,37 +185,53 @@ for(i in 1:K){
   # ===
   # FDA
   # ===
-  # Naive Bayesien
-  nb.lda <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
-  nb.lda.pred <- predict(nb.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
-  nb.lda.perf <- table(factor(y.app[folds==i]),nb.lda.pred)
-  nb.lda.error <-nb.lda.error + 1 - sum(diag(nb.lda.perf))/numberTest
+  # Tree
+  tree.lda <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
+  tree.lda.pred <- predict(tree.lda,newdata=as.data.frame(X.lda.data[folds==i,]), type="class")
+  tree.lda.perf <- table(y.app[folds==i],tree.lda.pred)
+  tree.lda.error <-tree.lda.error + 1 - sum(diag(tree.lda.perf))/numberTest
   
+  # SVM
+  #svm.lda <- svm(X.lda.data[folds!=i,],y.app[folds!=i],type="C-classification")
+  #svm.lda.pred <- predict(svm.lda, X.lda.data[folds==i,])
+  #svm.lda.perf <- table(factor(y.app[folds==i]),svm.lda.pred)
+  #svm.lda.error <-svm.lda.error + 1 - sum(diag(svm.lda.perf))/numberTest
+  
+  # SVM Tune
+  #svm.tune.lda <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.lda.data[folds!=i,], ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+  #svm.tune.lda.pred <- predict(svm.tune.lda$best.model , X.lda.data[folds==i,])
+  #svm.tune.lda.perf <- table(factor(y.app[folds==i]),svm.tune.lda.pred)
+  #svm.tune.lda.error <-svm.tune.lda.error + 1 - sum(diag(svm.tune.lda.perf))/numberTest
+  
+  # Naive Bayesien
+  #nb.lda <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
+  #nb.lda.pred <- predict(nb.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
+  #nb.lda.perf <- table(factor(y.app[folds==i]),nb.lda.pred)
+  #nb.lda.error <-nb.lda.error + 1 - sum(diag(nb.lda.perf))/numberTest
   
   # RegLog
-  logReg.lda.res<-c(rep(0,numberTest))
-  logReg.lda <- glmnet(X.lda.data[folds!=i,] ,y=y.app[folds!=i],family="multinomial")
-  logReg.lda.pred <- predict(logReg.lda,newx=X.lda.data[folds==i,],type="response",s=logReg.lda$lambda.min)
+  #logReg.lda.res<-c(rep(0,numberTest))
+  #logReg.lda <- glmnet(X.lda.data[folds!=i,] ,y=y.app[folds!=i],family="multinomial")
+  #logReg.lda.pred <- predict(logReg.lda,newx=X.lda.data[folds==i,],type="response",s=logReg.lda$lambda.min)
   
-  for (h in 1:numberTest) {
-    logReg.lda.res[h] <-which.max(logReg.lda.pred[h,1:6,dim(logReg.lda.pred)[3]])
-  }
-  logReg.lda.perf <- table(y.app[folds==i],logReg.lda.res)
-  logReg.lda.error <-logReg.lda.error + 1 - sum(diag(logReg.lda.perf))/numberTest
-  
+  #for (h in 1:numberTest) {
+   # logReg.lda.res[h] <-which.max(logReg.lda.pred[h,1:6,dim(logReg.lda.pred)[3]])
+  #}
+  #logReg.lda.perf <- table(y.app[folds==i],logReg.lda.res)
+  #logReg.lda.error <-logReg.lda.error + 1 - sum(diag(logReg.lda.perf))/numberTest
   
   # LDA
-  lda.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.lda.data[folds!=i,]))
-  lda.lda.pred <- predict(lda.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
-  lda.lda.perf <- table(y.app[folds==i],lda.lda.pred$class)
-  lda.lda.error <-lda.lda.error + 1 - sum(diag(lda.lda.perf))/numberTest
+  #lda.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.lda.data[folds!=i,]))
+  #lda.lda.pred <- predict(lda.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
+  #lda.lda.perf <- table(y.app[folds==i],lda.lda.pred$class)
+  #lda.lda.error <-lda.lda.error + 1 - sum(diag(lda.lda.perf))/numberTest
   
   # KNN
-  for(number in 1:numberKnn){
-    knn.lda <- knn(as.data.frame(X.lda.data[folds!=i,]), as.data.frame(X.lda.data[folds==i,]), y.app[folds!=i],k=number)
-    knn.lda.perf <- table(y.app[folds==i], knn.lda)
-    knn.lda.error[number] <-knn.lda.error[number]  + 1 - sum(diag(knn.lda.perf))/numberTest 
-  }
+  #for(number in 1:numberKnn){
+   # knn.lda <- knn(as.data.frame(X.lda.data[folds!=i,]), as.data.frame(X.lda.data[folds==i,]), y.app[folds!=i],k=number)
+    #knn.lda.perf <- table(y.app[folds==i], knn.lda)
+    #knn.lda.error[number] <-knn.lda.error[number]  + 1 - sum(diag(knn.lda.perf))/numberTest 
+  #}
   
   # ===
   # Quadratic Discriminant Analysis
@@ -233,6 +280,18 @@ nb.acp.error <- (nb.acp.error/K)*100
 nb.lda.error <- (nb.lda.error/K)*100
 nb.forward.error <- (nb.forward.error/K)*100
 
+svm.acp.error <- (svm.acp.error/K)*100
+svm.lda.error <- (svm.lda.error/K)*100
+svm.forward.error <- (svm.forward.error/K)*100
+
+svm.tune.acp.error <- (svm.tune.acp.error/K)*100
+svm.tune.lda.error <- (svm.tune.lda.error/K)*100
+svm.tune.forward.error <- (svm.tune.forward.error/K)*100
+
+tree.acp.error <- (tree.acp.error/K)*100
+tree.lda.error <- (tree.lda.error/K)*100
+tree.forward.error <- (tree.forward.error/K)*100
+
 print("QDA :")
 print(min(qda.acp.error))
 print(min(qda.lda.error))
@@ -257,4 +316,19 @@ print("Naive Bayesien :")
 print(min(nb.acp.error))
 print(min(nb.lda.error))
 #print(min(nb.forward.error))
+
+print("SVM :")
+print(min(svm.acp.error))
+print(min(svm.lda.error))
+#print(min(svm.forward.error))
+
+print("SVM Tune:")
+print(min(svm.tune.acp.error))
+print(min(svm.tune.lda.error))
+#print(min(svm.tune.forward.error))
+
+print("Tree:")
+print(min(tree.acp.error))
+print(min(tree.lda.error))
+#print(min(tree.forward.error))
 
