@@ -6,7 +6,7 @@ library(MASS)
 library(leaps)
 library(glmnet)
 library(class)
-
+library(e1071)
 
 X.dim <- dim(X)
 
@@ -56,6 +56,14 @@ K <- 2 # Nombre de sections dans notre ensemble d'apprentissage
 numberKnn <- 40
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
 
+nb.acp.error <- rep(0,159)
+nb.lda.error <- 0
+nb.forward.error <- rep(0, X.app.dim[2])
+
+logReg.acp.error <- rep(0,159)
+logReg.lda.error <- 0
+logReg.forward.error <- rep(0, X.app.dim[2])
+
 lda.acp.error <- rep(0,159)
 lda.lda.error <- 0
 lda.forward.error <- rep(0, X.app.dim[2])
@@ -103,6 +111,24 @@ for(i in 1:K){
       knn.acp.perf <- table(y.app[folds==i], knn.acp)
       knn.acp.error[number,j-1] <-knn.acp.error[number,j-1]  + 1 - sum(diag(knn.acp.perf))/numberTest
     }
+    
+    # LogReg
+    logReg.acp.res<-c(rep(0,numberTest))
+    logReg.acp <- glmnet(X.acp.data[folds!=i,1:j] ,y=y.app[folds!=i],family="multinomial")
+    logReg.acp.pred <- predict(logReg.acp,newx=X.acp.data[folds==i,1:j],type="response",s=logReg.acp$lambda.min)
+    
+    for (h in 1:numberTest) {
+      logReg.acp.res[h] <-which.max(logReg.acp.pred[h,1:6,dim(logReg.acp.pred)[3]])
+    }
+    
+    logReg.acp.perf <- table(y.app[folds==i],logReg.acp.res)
+    logReg.acp.error[j-1] <-logReg.acp.error[j-1] + 1 - sum(diag(logReg.acp.perf))/numberTest
+    
+    # Naive Baeysien
+    nb.acp <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
+    nb.acp.pred <- predict(nb.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
+    nb.acp.perf <- table(factor(y.app[folds==i]),nb.acp.pred)
+    nb.acp.error[j-1] <-nb.acp.error[j-1] + 1 - sum(diag(nb.acp.perf))/numberTest
   }
   
   # ===
@@ -128,6 +154,25 @@ for(i in 1:K){
   # ===
   # FDA
   # ===
+  # Naive Bayesien
+  nb.lda <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
+  nb.lda.pred <- predict(nb.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
+  nb.lda.perf <- table(factor(y.app[folds==i]),nb.lda.pred)
+  nb.lda.error <-nb.lda.error + 1 - sum(diag(nb.lda.perf))/numberTest
+  
+  
+  # RegLog
+  logReg.lda.res<-c(rep(0,numberTest))
+  logReg.lda <- glmnet(X.lda.data[folds!=i,] ,y=y.app[folds!=i],family="multinomial")
+  logReg.lda.pred <- predict(logReg.lda,newx=X.lda.data[folds==i,],type="response",s=logReg.lda$lambda.min)
+  
+  for (h in 1:numberTest) {
+    logReg.lda.res[h] <-which.max(logReg.lda.pred[h,1:6,dim(logReg.lda.pred)[3]])
+  }
+  logReg.lda.perf <- table(y.app[folds==i],logReg.lda.res)
+  logReg.lda.error <-logReg.lda.error + 1 - sum(diag(logReg.lda.perf))/numberTest
+  
+  
   # LDA
   lda.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.lda.data[folds!=i,]))
   lda.lda.pred <- predict(lda.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
@@ -180,10 +225,18 @@ knn.acp.error <- (knn.acp.error/K)*100
 knn.lda.error <- (knn.lda.error/K)*100
 knn.forward.error <- (knn.forward.error/K)*100
 
+logReg.acp.error <- (logReg.acp.error/K)*100
+logReg.lda.error <- (logReg.lda.error/K)*100
+logReg.forward.error <- (logReg.forward.error/K)*100
+
+nb.acp.error <- (nb.acp.error/K)*100
+nb.lda.error <- (nb.lda.error/K)*100
+nb.forward.error <- (nb.forward.error/K)*100
+
 print("QDA :")
 print(min(qda.acp.error))
 print(min(qda.lda.error))
-print(min(qda.forward.error))
+#print(min(qda.forward.error))
 
 print("LDA :")
 print(min(lda.acp.error))
@@ -194,4 +247,14 @@ print("KNN :")
 print(min(knn.acp.error))
 print(min(knn.lda.error))
 #print(knn.forward.error)
+
+print("RegLog :")
+print(min(logReg.acp.error))
+print(min(logReg.lda.error))
+#print(min(logReg.forward.error))
+
+print("Naive Bayesien :")
+print(min(nb.acp.error))
+print(min(nb.lda.error))
+#print(min(nb.forward.error))
 
