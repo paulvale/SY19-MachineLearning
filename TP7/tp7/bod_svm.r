@@ -122,12 +122,56 @@ svm.lda.confusion <- table(y.test, svm.lda.prediction)
 svm.forward.confusion <- table(y.test, svm.forward.prediction)
 
 # perform a grid search
-svm.acpF.tuneResult <- tune(svm.acpF, train.y = y.app,  train.x = X.acp.full, ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
-svm.acp1.tuneResult <- tune(svm.acp1, train.y = y.app,  train.x = X.acp.transform1,ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
-svm.acp2.tuneResult <- tune(svm.acp2, train.y = y.app,  train.x = X.acp.transform2, ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
-svm.lda.tuneResult <- tune(svm.lda, train.y = y.app,  train.x = X.lda.transform, ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
-svm.forward.tuneResult <- tune(svm.forward, train.y = y.app,  train.x = X.forward, ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9)))
+svm.acpF.tuneResult <- tune(svm, train.y = factor(y.app),  train.x = X.acp.full, ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+svm.acp1.tuneResult <- tune(svm, train.y = factor(y.app),  train.x = X.acp.transform1,ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+svm.acp2.tuneResult <- tune(svm, train.y = factor(y.app),  train.x = X.acp.transform2, ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+svm.lda.tuneResult <- tune(svm, train.y = factor(y.app),  train.x = X.lda.transform, ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+svm.forward.tuneResult <- tune(svm, train.y = factor(y.app),  train.x = X.forward, ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+
+# prediction after tune
+svm.acpF.tune.prediction <- predict(svm.acpF.tuneResult$best.model, X.acp.test.full)
+svm.acp1.tune.prediction <- predict(svm.acp1.tuneResult$best.model, X.acp.test.transform1)
+svm.acp2.tune.prediction <- predict(svm.acp2.tuneResult$best.model, X.acp.test.transform2)
+svm.lda.tune.prediction <- predict(svm.lda.tuneResult$best.model, X.lda.transform.test)
+svm.forward.tune.prediction <- predict(svm.forward.tuneResult$best.model, X.forward.test)
+
+# matrice de confusion
+svm.acpF.tune.confusion <- table(factor(y.test), svm.acpF.tune.prediction)
+svm.acp1.tune.confusion <- table(factor(y.test), svm.acp1.tune.prediction)
+svm.acp2.tune.confusion <- table(factor(y.test), svm.acp2.tune.prediction)
+svm.lda.tune.confusion <- table(factor(y.test), svm.lda.tune.prediction)
+svm.forward.tune.confusion <- table(factor(y.test), svm.forward.tune.prediction)
+
+# Erreur pour tout 
+# avec tune
+svm.acpF.tune.error <- 1 - sum(diag(svm.acpF.tune.confusion))/length(y.test)
+svm.acp1.tune.error <- 1 - sum(diag(svm.acp1.tune.confusion))/length(y.test)
+svm.acp2.tune.error <- 1 - sum(diag(svm.acp2.tune.confusion))/length(y.test)
+svm.lda.tune.error <- 1 - sum(diag(svm.lda.tune.confusion))/length(y.test)
+svm.forward.tune.error <- 1 - sum(diag(svm.forward.tune.confusion))/length(y.test)
+
+# sans tune
+svm.acpF.error <- 1 - sum(diag(svm.acpF.confusion))/length(y.test)
+svm.acp1.error <- 1 - sum(diag(svm.acp1.confusion))/length(y.test)
+svm.acp2.error <- 1 - sum(diag(svm.acp2.confusion))/length(y.test)
+svm.lda.error <- 1 - sum(diag(svm.lda.confusion))/length(y.test)
+svm.forward.error <- 1 - sum(diag(svm.forward.confusion))/length(y.test)
+
+print(svm.acpF.error)
+print(svm.acp1.error) 
+print(svm.acp2.error) 
+print(svm.lda.error) 
+print(svm.forward.error) 
+
+print(svm.acpF.error - svm.acpF.tune.error) 
+print(svm.acp1.error - svm.acp1.tune.error)
+print(svm.acp2.error - svm.acp2.tune.error)
+print(svm.lda.error - svm.lda.tune.error) 
+print(svm.forward.error - svm.forward.tune.error)
 
 
-svm_tune <- tune(svm.acp1,y.app~., data=X.acp.transform1)
+
+ 
+
+ 
 

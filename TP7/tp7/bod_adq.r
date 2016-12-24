@@ -50,35 +50,74 @@ for(i in 1:6){
 X.test.dim <- dim(X.test)
 X.app.dim <- dim(X.app)
 
-# ====
-# Reduction de la dimensionnalite des variables
 # ===
-# 3 techniques de reduction de dimensionnalite a essaye :
-# - FDA
-# - ACP
-# - Forward/Backward Selection
+# Quadratic Discriminant Analysis
+# ===
+K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
+folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
+qda.acp.error <- rep(0,5) # 29 expressions face app 
+qda.lda.error <- 0
+qda.forward.error <- rep(0,5)
 
-# 1) FDA
-X.lda <- lda(y.app~., data=as.data.frame(X.app))
-X.lda.prop = cumsum(X.lda$svd^2/sum(X.lda$svd^2))
+for(i in 1:K){
+  print(i)
+  # ====
+  # Reduction de la dimensionnalite des variables
+  # ===
+  # 1) FDA
+  X.lda <- lda(y.app~., data=as.data.frame(X.app))
+  #X.lda.prop = cumsum(X.lda$svd^2/sum(X.lda$svd^2))
+  
+  X.lda.data <- X.app%*%X.lda$scaling
+  
+  # 2) ACP
+  X.acp <- prcomp(X.app)
+  #acp.sum <- cumsum(100 * X.acp$sdev^2 / sum(X.acp$sdev^2))
+  
+  X.acp.data <- X.acp$x
+  
+  # 3) Forward/Backward Selection
+  reg.fit<-regsubsets(y.app~.,data=as.data.frame(X.app),method="forward")
+  
+  #tmp <- which(reg.fit$rss > 50)
+  #ind <- tmp[length(tmp)]
+  
+  #X.forward <- X.app[,which(reg.fit$vorder < ind)]
+  
+  numberTest <- dim(X.lda.data[folds==i,])[1]
 
-X.lda.transform <- X.app%*%X.lda$scaling
+  
+  for(j in 2:6){
+    # ACP
+    qda.acp <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
+    qda.acp.pred <- predict(qda.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
+    qda.acp.perf <- table(y.app[folds==i],qda.acp.pred$class)
+    qda.acp.error[j-1] <-qda.acp.error[j-1] + 1 - sum(diag(qda.acp.perf))/numberTest
+    
+    # Forward
+    qda.forward <- qda(y.app[folds!=i]~., data=as.data.frame(X.app[folds!=i,c(reg.fit$vorder[1:j])]))
+    qda.forward.pred <- predict(qda.forward,newdata=as.data.frame(X.app[folds==i,c(reg.fit$vorder[1:j])]))
+    qda.forward.perf <- table(y.app[folds==i],qda.forward.pred$class)
+    qda.forward.error[j-1] <-qda.forward.error[j-1] + 1 - sum(diag(qda.forward.perf))/numberTest
+  }
+  
+  # FDA
+  qda.lda <- qda(y.app[folds!=i]~., data=as.data.frame(X.lda.data[folds!=i,]))
+  qda.lda.pred <- predict(qda.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
+  qda.lda.perf <- table(y.app[folds==i],qda.lda.pred$class)
+  qda.lda.error <-qda.lda.error + 1 - sum(diag(qda.lda.perf))/numberTest
+  
 
-# 2) ACP
-X.acp <- prcomp(X.app)
-acp.sum <- cumsum(100 * X.acp$sdev^2 / sum(X.acp$sdev^2))
+}
 
-X.acp.full <- X.acp$x[,1:166]
-X.acp.transform1 <- X.acp$x[,which(acp.sum<75)]
-X.acp.transform2 <- X.acp$x[,which(acp.sum<85)]
+# Diviser le taux d'erreur par le nombre de K 
+qda.acp.error <-(qda.acp.error/K)*100
+qda.lda.error <-(qda.lda.error/K)*100
+qda.forward.error <-(qda.forward.error/K)*100
 
-# 3) Forward/Backward Selection
-reg.fit<-regsubsets(y.app~.,data=as.data.frame(X.app),method="forward",nvmax=50)
-
-tmp <- which(reg.fit$rss > 50)
-ind <- tmp[length(tmp)]
-
-X.forward <- X.app[,which(reg.fit$vorder < ind)]
+print(qda.acp.error)
+print(qda.lda.error)
+print(qda.forward.error)
 
 ## === 
 ## Transformation aussi de nos donnees de test dans le meme referentiel pour toutes 
@@ -88,73 +127,9 @@ X.forward <- X.app[,which(reg.fit$vorder < ind)]
 X.lda.transform.test <- X.test%*%X.lda$scaling
 
 # 2) ACP
-X.acp.test <- X.test %*% X.acp$rotation
-
-X.acp.test.full <- X.acp.test[,1:166]
-X.acp.test.transform1 <- X.acp.test[,which(acp.sum<75)]
-X.acp.test.transform2 <- X.acp.test[,which(acp.sum<85)]
+X.acp.test.data <- X.test %*% X.acp$rotation
 
 # 3) Forward/Backward Selection
-X.forward.test <- X.test[,which(reg.fit$vorder < ind)]
-
-
-# ===
-# Quadratic Discriminant Analysis
-# ===
-K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
-folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
-qda.acpF.error <- 0
-qda.acp1.error <- 0
-qda.acp2.error <- 0
-qda.lda.error <- 0
-qda.forward.error <- 0
-
-for(i in 1:K){
-  numberTest <- dim(X.acp.transform1[folds==i,])[1]
-  print("i")
-
-  # ACP Full
-  qda.acpF <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.full[folds!=i,]))
-  qda.acpF.pred <- predict(qda.acpF,newdata=as.data.frame(X.acp.full[folds==i,]))
-  qda.acpF.perf <- table(y.app[folds==i],qda.acpF.pred$class)
-  qda.acpF.error <-qda.acpF.error + 1 - sum(diag(qda.acpF.perf))/numberTest
-  print("i")
-  # ACP 1
-  qda.acp1 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform1[folds!=i,]))
-  qda.acp1.pred <- predict(qda.acp1,newdata=as.data.frame(X.acp.transform1[folds==i,]))
-  qda.acp1.perf <- table(y.app[folds==i],qda.acp1.pred$class)
-  qda.acp1.error <-qda.acp1.error + 1 - sum(diag(qda.acp1.perf))/numberTest
-  print("i")
-  # ACP 2
-  qda.acp2 <- qda(y.app[folds!=i]~., data=as.data.frame(X.acp.transform2[folds!=i,]))
-  qda.acp2.pred <- predict(qda.acp2,newdata=as.data.frame(X.acp.transform2[folds==i,]))
-  qda.acp2.perf <- table(y.app[folds==i],qda.acp2.pred$class)
-  qda.acp2.error <-qda.acp2.error + 1 - sum(diag(qda.acp2.perf))/numberTest
-  print("i")
-  # FDA
-  qda.lda <- qda(y.app[folds!=i]~., data=as.data.frame(X.lda.transform[folds!=i,]))
-  qda.lda.pred <- predict(qda.lda,newdata=as.data.frame(X.lda.transform[folds==i,]))
-  qda.lda.perf <- table(y.app[folds==i],qda.lda.pred$class)
-  qda.lda.error <-qda.lda.error + 1 - sum(diag(qda.lda.perf))/numberTest
-  print("i")
-  # Forward
-  qda.forward <- qda(y.app[folds!=i]~., data=as.data.frame(X.forward[folds!=i,]))
-  qda.forward.pred <- predict(qda.forward,newdata=as.data.frame(X.forward[folds==i,]))
-  qda.forward.perf <- table(y.app[folds==i],qda.forward.pred$class)
-  qda.forward.error <-qda.forward.error + 1 - sum(diag(qda.forward.perf))/numberTest
-}
-
-# Diviser le taux d'erreur par le nombre de K 
-qda.acpF.error <-(qda.acpF.error/K)*100
-qda.acp1.error <-(qda.acp1.error/K)*100
-qda.acp2.error <-(qda.acp2.error/K)*100
-qda.lda.error <-(qda.lda.error/K)*100
-qda.forward.error <-(qda.forward.error/K)*100
-
-print(qda.acpF.error)
-print(qda.acp1.error)
-print(qda.acp2.error)
-print(qda.lda.error)
-print(qda.forward.error)
+# X.forward.test <- X.test[,which(reg.fit$vorder < ind)]
 
 
