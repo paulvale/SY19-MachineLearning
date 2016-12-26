@@ -8,6 +8,7 @@ library(glmnet)
 library(class)
 library(e1071)
 library(tree)
+library(randomForest)
 
 X.dim <- dim(X)
 
@@ -55,6 +56,7 @@ X.app.dim <- dim(X.app)
 
 K <- 2 # Nombre de sections dans notre ensemble d'apprentissage
 numberKnn <- 40
+vectorTree <- seq(100,1500,100)
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
 
 tree.acp.error <- rep(0,159)
@@ -88,6 +90,10 @@ qda.forward.error <- rep(0,5)
 knn.acp.error <- matrix(0,nrow=numberKnn, ncol=159)
 knn.lda.error <- rep(0,numberKnn)
 knn.forward.error <- matrix(0,nrow=numberKnn, ncol=X.app.dim[2])
+
+rf.acp.error <- matrix(0,nrow=length(vectorTree), ncol=159)
+rf.lda.error <- rep(0,length(vectorTree))
+rf.forward.error <- matrix(0,nrow=length(vectorTree), ncol=X.app.dim[2])
 
 for(i in 1:K){
   print(i)
@@ -137,6 +143,12 @@ for(i in 1:K){
     #logReg.acp.perf <- table(y.app[folds==i],logReg.acp.res)
     #logReg.acp.error[j-1] <-logReg.acp.error[j-1] + 1 - sum(diag(logReg.acp.perf))/numberTest
     
+    # Random Forest
+    #for(tree in vectorTree) {
+     # rf.acp <- randomForest(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]), xtest=as.data.frame(X.acp.data[folds==i,1:j]), ytest=factor(y.app[folds==i]), ntree=tree)
+    #  rf.acp.error[tree/100, j-1] <- rf.acp.error[tree/100, j-1] + 1 - (sum(diag(rf.acp$test$confusion)/numberTest))
+    #}
+        
     # Naive Baeysien
     #nb.acp <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
     #nb.acp.pred <- predict(nb.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
@@ -156,10 +168,11 @@ for(i in 1:K){
     #svm.tune.acp.error[j-1] <-svm.tune.acp.error[j-1] + 1 - sum(diag(svm.tune.acp.perf))/numberTest
     
     # Tree
-    tree.acp <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
-    tree.acp.pred <- predict(tree.acp,as.data.frame(X.acp.data[folds==i,1:j]), type="class")
-    tree.acp.perf <- table(y.app[folds==i],tree.acp.pred)
-    tree.acp.error[j-1] <-tree.acp.error[j-1] + 1 - sum(diag(tree.acp.perf))/numberTest
+    #tree.acp <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
+    #tree.acp.pred <- predict(tree.acp,as.data.frame(X.acp.data[folds==i,1:j]), type="class")
+    #tree.acp.perf <- table(y.app[folds==i],tree.acp.pred)
+    #tree.acp.error[j-1] <-tree.acp.error[j-1] + 1 - sum(diag(tree.acp.perf))/numberTest
+    
   }
   
   # ===
@@ -185,11 +198,17 @@ for(i in 1:K){
   # ===
   # FDA
   # ===
+  # Random Forest
+  for(tree in vectorTree) {
+    rf.lda <- randomForest(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]), xtest=as.data.frame(X.lda.data[folds==i,]), ytest=factor(y.app[folds==i]), ntree=tree)
+    rf.lda.error[tree/100] <- rf.lda.error[tree/100] + 1 - (sum(diag(rf.lda$test$confusion)/numberTest))
+  }
+  
   # Tree
-  tree.lda <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
-  tree.lda.pred <- predict(tree.lda,newdata=as.data.frame(X.lda.data[folds==i,]), type="class")
-  tree.lda.perf <- table(y.app[folds==i],tree.lda.pred)
-  tree.lda.error <-tree.lda.error + 1 - sum(diag(tree.lda.perf))/numberTest
+  #tree.lda <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
+  #tree.lda.pred <- predict(tree.lda,newdata=as.data.frame(X.lda.data[folds==i,]), type="class")
+  #tree.lda.perf <- table(y.app[folds==i],tree.lda.pred)
+  #tree.lda.error <-tree.lda.error + 1 - sum(diag(tree.lda.perf))/numberTest
   
   # SVM
   #svm.lda <- svm(X.lda.data[folds!=i,],y.app[folds!=i],type="C-classification")
@@ -292,6 +311,10 @@ tree.acp.error <- (tree.acp.error/K)*100
 tree.lda.error <- (tree.lda.error/K)*100
 tree.forward.error <- (tree.forward.error/K)*100
 
+rf.acp.error <- (rf.acp.error/K)*100
+rf.lda.error <- (rf.lda.error/K)*100
+rf.forward.error <- (rf.forward.error/K)*100
+
 print("QDA :")
 print(min(qda.acp.error))
 print(min(qda.lda.error))
@@ -331,4 +354,9 @@ print("Tree:")
 print(min(tree.acp.error))
 print(min(tree.lda.error))
 #print(min(tree.forward.error))
+
+print("Random Forest :")
+print(min(rf.acp.error))
+print(min(rf.lda.error))
+#print(min(rf.forward.error))
 
