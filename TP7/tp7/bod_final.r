@@ -113,7 +113,7 @@ for(i in 1:K){
   
   # 3) Forward/Backward Selection
   reg.fit<-regsubsets(y.app~.,data=as.data.frame(X.acp.data),method="forward", intercept=FALSE)
-  plot(reg.fit)
+  #plot(reg.fit)
   X.forward.data <- X.acp.data[,which(reg.fit$vorder == 1)]
   X.forward.data <- as.data.frame(X.forward.data)
   names(X.forward.data)[1] <- colnames(X.acp.data)[which(reg.fit$vorder == 1)]
@@ -292,7 +292,7 @@ for(i in 1:K){
   logReg.lda.pred <- predict(logReg.lda,newx=X.lda.data[folds==i,],type="response",s=logReg.lda$lambda.min)
   
   for (h in 1:numberTest) {
-    logReg.lda.res[h] <-which.max(logReg.lda.pred[h,1:6,dim(logReg.lda.pred)[3]])
+    logReg.lda.res[h] <-which.max(logReg.lda.pred[h,1:6,dim(logReg.lda.pred)[3] -1])
   }
   logReg.lda.perf <- table(y.app[folds==i],logReg.lda.res)
   logReg.lda.error <-logReg.lda.error + 1 - sum(diag(logReg.lda.perf))/numberTest
