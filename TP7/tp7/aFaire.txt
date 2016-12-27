@@ -33,3 +33,41 @@ Le prof a notamment dit en TD qu'il y avait enormement de redondances et de line
 Du coup je pense que le fait d'appuyer la dessus lors du rapport est largement suffisant 
 Par contre, la forward selection peut etre tres interessante a faire sur les ACPs que nous avons recu 
 et du coup il faudrait plutot faire une Forward selection sur les differentes variables que l'on a avec notre ACP
+
+
+[1] "QDA :"
+[1] 30.5009
+[1] 6.259798
+[1] 49.49503
+[1] "LDA :"
+[1] 11.77296
+[1] 4.135406
+[1] 20.99979
+[1] "KNN :"
+[1] 21.51793
+[1] 2.825635
+[1] 22.63336
+[1] "RegLog :"
+[1] 15.60214
+[1] 8.444558
+[1] 21.72796
+[1] "Naive Bayesien :"
+[1] 21.58572
+[1] 3.366176
+[1] 30.03028
+[1] "SVM :"
+[1] 20.57476
+[1] 3.906716
+[1] 27.25546
+[1] "SVM Tune:"
+[1] 15.95376
+[1] 3.366176
+[1] 21.56726
+[1] "Tree:"
+[1] 31.93773
+[1] 9.497618
+[1] 32.30453
+[1] "Random Forest :"
+[1] 100
+[1] 100
+[1] 100
