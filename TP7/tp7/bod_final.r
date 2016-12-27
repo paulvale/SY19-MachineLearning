@@ -119,8 +119,8 @@ for(i in 1:K){
   names(X.forward.data)[1] <- colnames(X.acp.data)[which(reg.fit$vorder == 1)]
 
   numberTest <- dim(X.lda.data[folds==i,])[1]
-  y.app.factor <- y.app[folds!=i]
-  y.test.factor <- y.app[folds==i]
+  y.app.factor <- factor(y.app[folds!=i])
+  y.test.factor <- factor(y.app[folds==i])
   levels(y.test.factor) <- levels(y.app.factor)
   
   # ===
