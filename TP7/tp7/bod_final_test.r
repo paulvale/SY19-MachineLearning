@@ -82,30 +82,39 @@ for(i in 1:dim(methodMatrix)[1]){
     ind =  which(acp == min(acp), arr.ind = TRUE)
     print(ind)
   } else if(lda.min < acp.min && lda.min < forward.min){
-    print("lda")
     if( i == 3 ){
       print("knn Test Result :")
       ind =  which(lda == min(lda), arr.ind = TRUE) 
+      knn.test.lda <- knn(as.data.frame(X.lda.data), as.data.frame(X.lda.test), y.app,k=ind[1])
+      knn.test.lda.perf <- table(y.test, knn.test.lda)
+      knn.test.lda.error <- (1 - sum(diag(knn.test.lda.perf))/X.test.dim[1])*100
+      cat("app :", lda.min, "\n")
+      cat("test :", knn.test.lda.error, "\n")
     } else if (i == 9){
       print("rf Test Result :")
       ind =  which(lda == min(lda), arr.ind = TRUE) 
       numberofTree <- vectorTree[ind]
-      print(numberofTree)
+      rf.test.lda <- randomForest(y.test.app.factor~., data=as.data.frame(X.lda.data), xtest=as.data.frame(X.lda.test), ytest=y.test.test.factor, ntree=numberofTree)
+      rf.test.lda.error <- (1 - (sum(diag(rf.test.lda$test$confusion)/X.test.dim[1])))*100
+      cat("app :", lda.min, "\n")
+      cat("test :", rf.test.lda.error, "\n")
     } else {
       if( i == 1) { # QDA
         print("QDA Test Result :")
         qda.test.lda <- qda(y.app~., data=as.data.frame(X.lda.data))
         qda.test.lda.pred <- predict(qda.test.lda,newdata=as.data.frame(X.lda.test))
         qda.test.lda.perf <- table(y.test,qda.test.lda.pred$class)
-        qda.test.lda.error <- 1 - sum(diag(qda.test.lda.perf))/X.test.dim[1]
-        print(qda.test.lda.error)
+        qda.test.lda.error <- (1 - sum(diag(qda.test.lda.perf))/X.test.dim[1])*100
+        cat("app :", lda.min, "\n")
+        cat("test :", qda.test.lda.error, "\n")
       } else if( i == 2){ # LDA 
         print("LDA Test Result :")
         lda.test.lda <- lda(y.app~., data=as.data.frame(X.lda.data))
         lda.test.lda.pred <- predict(lda.test.lda,newdata=as.data.frame(X.lda.test))
         lda.test.lda.perf <- table(y.test,lda.test.lda.pred$class)
-        lda.test.lda.error <- 1 - sum(diag(lda.test.lda.perf))/X.test.dim[1]
-        print(lda.test.lda.error)
+        lda.test.lda.error <- (1 - sum(diag(lda.test.lda.perf))/X.test.dim[1])*100
+        cat("app :", lda.min, "\n")
+        cat("test :", lda.test.lda.error, "\n")
       } else if( i == 4) { # LogReg
         print("LogReg Test Result :")
         logReg.test.lda.res<-c(rep(0,X.test.dim[1]))
@@ -116,36 +125,41 @@ for(i in 1:dim(methodMatrix)[1]){
           logReg.test.lda.res[h] <-which.max(logReg.test.lda.pred[h,1:6,dim(logReg.test.lda.pred)[3]-1])
         }
         logReg.test.lda.perf <- table(y.test,logReg.test.lda.res)
-        logReg.test.lda.error <-1 - sum(diag(logReg.test.lda.perf))/X.test.dim[1]
-        print(logReg.test.lda.error)
+        logReg.test.lda.error <-(1 - sum(diag(logReg.test.lda.perf))/X.test.dim[1])*100
+        cat("app :", lda.min, "\n")
+        cat("test :", logReg.test.lda.error, "\n")
       } else if( i == 5) { # naive bayesien
         print("NB Test Result :")
         nb.test.lda <- naiveBayes(factor(y.app)~., data=as.data.frame(X.lda.data))
         nb.test.lda.pred <- predict(nb.test.lda,newdata=as.data.frame(X.lda.test))
         nb.test.lda.perf <- table(factor(y.test),nb.test.lda.pred)
-        nb.test.lda.error <- 1 - sum(diag(nb.test.lda.perf))/X.test.dim[1]
-        print(nb.test.lda.error)
+        nb.test.lda.error <- (1 - sum(diag(nb.test.lda.perf))/X.test.dim[1])*100
+        cat("app :", lda.min, "\n")
+        cat("test :", nb.test.lda.error, "\n")
       } else if( i == 6) { # SVM
         print("SVM Test Result :")
         svm.test.lda <- svm(X.lda.data,y.app,type="C-classification")
         svm.test.lda.pred <- predict(svm.test.lda, X.lda.test)
         svm.test.lda.perf <- table(factor(y.test),svm.test.lda.pred)
-        svm.test.lda.error <- 1 - sum(diag(svm.test.lda.perf))/X.test.dim[1]
-        print(svm.test.lda.error)
+        svm.test.lda.error <- (1 - sum(diag(svm.test.lda.perf))/X.test.dim[1])*100
+        cat("app :", lda.min, "\n")
+        cat("test :", svm.test.lda.error, "\n")
       } else if( i == 7) { # SVM Tune
         print("SVM TUNE Test Result :")
         svm.tune.test.lda <- tune(svm, train.y = factor(y.app),  train.x = X.lda.data, ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
         svm.tune.test.lda.pred <- predict(svm.tune.test.lda$best.model , X.lda.test)
         svm.tune.test.lda.perf <- table(factor(y.test),svm.tune.test.lda.pred)
-        svm.tune.test.lda.error <- 1 - sum(diag(svm.tune.test.lda.perf))/X.test.dim[1]
-        print(svm.tune.test.lda.error)
+        svm.tune.test.lda.error <- (1 - sum(diag(svm.tune.test.lda.perf))/X.test.dim[1])*100
+        cat("app :", lda.min, "\n")
+        cat("test :", svm.tune.test.lda.error, "\n")
       } else if( i == 8) { # Tree
         print("Tree Test Result :") 
         tree.test.lda <- tree(factor(y.app)~., data=as.data.frame(X.lda.data))
         tree.test.lda.pred <- predict(tree.test.lda,newdata=as.data.frame(X.lda.test), type="class")
-        tree.test.lda.perf <- table(y.app,tree.test.lda.pred)
-        tree.test.lda.error <- 1 - sum(diag(tree.test.lda.perf))/X.test.dim[1]
-        print(tree.test.lda.error)
+        tree.test.lda.perf <- table(y.test,tree.test.lda.pred)
+        tree.test.lda.error <- (1 - sum(diag(tree.test.lda.perf))/X.test.dim[1])*100
+        cat("app :", lda.min, "\n")
+        cat("test :", tree.test.lda.error, "\n")
       }
     }
   } else {
