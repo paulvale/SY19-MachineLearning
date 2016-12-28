@@ -584,7 +584,3 @@ print(mean(fda.error.neuralnetNoBP))
 
 # Nous retznons donc le neuralnet avec 3 neuronnes cachés et sans algo de backprop
 
-# resultats finaux :
-# - FDA avec nnet : 11,06%
-# - FDA avec neuralnet : 9,4%
-
