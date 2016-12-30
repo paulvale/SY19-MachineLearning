@@ -1,7 +1,7 @@
 # LOAD PACKAGES 
 # =============
 rm(list=ls())
-load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/end2.rData")
+load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/endNN.rData")
 library(MASS)
 library(leaps)
 library(glmnet)
@@ -24,9 +24,22 @@ methodArray <- c("qda.acp.error","qda.lda.error","qda.forward.error",
                  "svm.acp.error","svm.lda.error","svm.forward.error",
                  "svm.tune.acp.error","svm.tune.lda.error","svm.tune.forward.error",
                  "tree.acp.error","tree.lda.error","tree.forward.error",
-                 "rf.acp.error","rf.lda.error","rf.forward.error"
+                 "rf.acp.error","rf.lda.error","rf.forward.error",
                  "nn.acp.error","nn.lda.error","nn.forward.error"
                 )
+
+# declaration de fonciton utile pour le reseau de neurones
+getFormulas <- function(col, order, label) {
+  result <- vector(mode="character", length=length(order))
+  for(i in 1:length(order)){
+    if(i == 1){
+      result[i] <- paste(c(as.character(label)," ~ ",col[order[i]]),collapse = '')
+    } else {
+      result[i] <- paste(c(result[i-1], col[order[i]]), collapse = ' + ')
+    }
+  }
+  return(result)
+}
 
 methodMatrix <- matrix(data = methodArray, ncol=3, byrow = TRUE)
 
@@ -168,44 +181,50 @@ for(i in 1:dim(methodMatrix)[1]){
         cat("test :", tree.test.lda.error, "\n")
       }else if( i == 10) { # Neural network
         print("Neural network Test Result :") 
-        data.train = X.lda.data[folds!=i,1:j]
-        data.test = X.lda.data[folds==i,1:j]
-        y.train = y.app[folds!=i]
-        y.testfold = y.app[folds==i]
+        data.train = X.lda.data
+        data.test = X.lda.test
+        y.train = y.app
+        y.testfold = y.test
         ordre = c(1:dim(data.train)[2])
         for(kk in 1:6){
             response <- rep(0,length(y.train))
-            for(j in 1:length(y.train)){
-              if(y.train[j]==k){
-                response[j]=1
+            for(myVar in 1:length(y.train)){
+              if(y.train[myVar]==kk){
+                response[myVar]=1
               }
             }
             newDataSet <- data.frame(data.train,response)
             formule = getFormulas(colnames(newDataSet), ordre,"response")
-            if(kk==1)
-            {
-              neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
-
-            }
-            else if( kk==2)
-            {
-              neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
-
-            }
-            else if(kk==3){
-              neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
-
-            }
-            else if(kk==4){
-              neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
-
-            }
-            else if(kk==5){
-              neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
-
-            }
-            else if(kk==6){
-              neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            if(kk==1){
+              neuralnet1 <- NULL
+              while(is.null(neuralnet1$result.matrix)){
+                neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+              }
+            } else if( kk==2) {
+              neuralnet2 <- NULL
+              while(is.null(neuralnet2$result.matrix)){
+                neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+              }
+            } else if(kk==3){
+              neuralnet3 <- NULL
+              while(is.null(neuralnet3$result.matrix)){
+                neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+              }
+            } else if(kk==4){
+              neuralnet4 <- NULL
+              while(is.null(neuralnet4$result.matrix)){
+                neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+              }
+            } else if(kk==5){
+              neuralnet5 <- NULL
+              while(is.null(neuralnet5$result.matrix)){
+                neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+              }
+            } else if(kk==6){
+              neuralnet6 <- NULL
+              while(is.null(neuralnet6$result.matrix)){
+                neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+              }
             }
           }
           # predictions 
@@ -216,12 +235,12 @@ for(i in 1:dim(methodMatrix)[1]){
           c5<-compute(neuralnet5,as.matrix(data.test))
           c6<-compute(neuralnet6,as.matrix(data.test))
           neuralnet.result <- rep(0,dim(data.test)[1])
-          for(j in 1:dim(data.test)[1]){
-            index <- which.max(c(c1$net.result[j],c2$net.result[j],c3$net.result[j],c4$net.result[j],c5$net.result[j],c6$net.result[j]))
-            neuralnet.result[j] <- index
+          for(myVar in 1:dim(data.test)[1]){
+            index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
+            neuralnet.result[myVar] <- index
           }
           neuralnet.perf <- table(neuralnet.result,y.testfold)
-          nn.test.lda.error <- 1-sum(diag(neuralnet.perf))/length(y.testfold)
+          nn.test.lda.error <- (1-sum(diag(neuralnet.perf))/length(y.testfold))*100
           cat("app :", lda.min, "\n")
           cat("test :", nn.test.lda.error, "\n")
       }
@@ -232,3 +251,6 @@ for(i in 1:dim(methodMatrix)[1]){
     print(ind)
   }
 }
+
+# Observation de nos meilleurs modeles maintenant qu'ils ont ete calcule
+
