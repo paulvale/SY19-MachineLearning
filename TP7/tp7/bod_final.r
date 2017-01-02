@@ -72,7 +72,7 @@ for(i in 1:6){
 X.test.dim <- dim(X.test)
 X.app.dim <- dim(X.app)
 
-K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
+K <- 10 # Nombre de sections dans notre ensemble d'apprentissage
 numberKnn <- 40
 vectorTree <- seq(100,1500,100)
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
