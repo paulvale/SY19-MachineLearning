@@ -148,12 +148,14 @@ for(i in 1:dim(methodMatrix)[1]){
   } else if(lda.min < acp.min && lda.min < forward.min){
     if( i == 3 ){
       ind =  which(lda == min(lda), arr.ind = TRUE) 
+      print(ind)
       knn.test.lda.k5 <- knn(as.data.frame(X.lda.data), as.data.frame(X.lda.test), y.app,k=ind[1])
       knn.test.lda.perf.k5 <- table(y.test, knn.test.lda.k5)
       knn.test.lda.error.k5 <- (1 - sum(diag(knn.test.lda.perf.k5))/X.test.dim[1])*100
       knn.app.lda.error.k5 <- lda.min
     } else if( i == 13 ){
       ind =  which(lda == min(lda), arr.ind = TRUE) 
+      print(ind)
       knn.test.lda <- knn(as.data.frame(X.lda.data), as.data.frame(X.lda.test), y.app,k=ind[1])
       knn.test.lda.perf <- table(y.test, knn.test.lda)
       knn.test.lda.error <- (1 - sum(diag(knn.test.lda.perf))/X.test.dim[1])*100
