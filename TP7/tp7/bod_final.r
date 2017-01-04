@@ -72,7 +72,7 @@ for(i in 1:6){
 X.test.dim <- dim(X.test)
 X.app.dim <- dim(X.app)
 
-K <- 10 # Nombre de sections dans notre ensemble d'apprentissage
+K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
 numberKnn <- 40
 vectorTree <- seq(100,1500,100)
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
@@ -127,8 +127,9 @@ for(i in 1:K){
   # Reduction de la dimensionnalite des variables
   # ===
   # 1) FDA
-  X.lda <- lda(y.app~., data=as.data.frame(X.app))
-  X.lda.data <- X.app%*%X.lda$scaling
+  X.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.app[folds!=i,]))
+  X.lda.data <- X.app[folds!=i,]%*%X.lda$scaling
+  X.lda.testfold <- X.app[folds==i,]%*%X.lda$scaling
   
   # 2) ACP
   X.acp <- prcomp(X.app)
@@ -141,7 +142,7 @@ for(i in 1:K){
   X.forward.data <- as.data.frame(X.forward.data)
   names(X.forward.data)[1] <- colnames(X.acp.data)[which(reg.fit$vorder == 1)]
 
-  numberTest <- dim(X.lda.data[folds==i,])[1]
+  numberTest <- dim(X.lda.testfold)[1]
   y.app.factor <- factor(y.app[folds!=i])
   y.test.factor <- factor(y.app[folds==i])
   levels(y.test.factor) <- levels(y.app.factor)
@@ -346,7 +347,7 @@ for(i in 1:K){
     for(kk in 1:6){
         response <- rep(0,length(y.train))
         for(myVar in 1:length(y.train)){
-          if(y.train[myVar]==kk){
+         if(y.train[myVar]==kk){
             response[myVar]=1
           }
         }
@@ -410,38 +411,38 @@ for(i in 1:K){
   print("FDA")
   # Random Forest
   for(tree in vectorTree) {
-    rf.lda <- randomForest(y.app.factor~., data=as.data.frame(X.lda.data[folds!=i,]), xtest=as.data.frame(X.lda.data[folds==i,]), ytest=y.test.factor, ntree=tree)
+    rf.lda <- randomForest(y.app.factor~., data=as.data.frame(X.lda.data), xtest=as.data.frame(X.lda.testfold), ytest=y.test.factor, ntree=tree)
     rf.lda.error[tree/100] <- rf.lda.error[tree/100] + 1 - (sum(diag(rf.lda$test$confusion)/numberTest))
   }
   
   # Tree
-  tree.lda <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
-  tree.lda.pred <- predict(tree.lda,newdata=as.data.frame(X.lda.data[folds==i,]), type="class")
+  tree.lda <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data))
+  tree.lda.pred <- predict(tree.lda,newdata=as.data.frame(X.lda.testfold), type="class")
   tree.lda.perf <- table(y.app[folds==i],tree.lda.pred)
   tree.lda.error <-tree.lda.error + 1 - sum(diag(tree.lda.perf))/numberTest
   
   # SVM
-  svm.lda <- svm(X.lda.data[folds!=i,],y.app[folds!=i],type="C-classification")
-  svm.lda.pred <- predict(svm.lda, X.lda.data[folds==i,])
+  svm.lda <- svm(X.lda.data,y.app[folds!=i],type="C-classification")
+  svm.lda.pred <- predict(svm.lda, X.lda.testfold)
   svm.lda.perf <- table(factor(y.app[folds==i]),svm.lda.pred)
   svm.lda.error <-svm.lda.error + 1 - sum(diag(svm.lda.perf))/numberTest
   
   # SVM Tune
-  svm.tune.lda <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.lda.data[folds!=i,], ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
-  svm.tune.lda.pred <- predict(svm.tune.lda$best.model , X.lda.data[folds==i,])
+  svm.tune.lda <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.lda.data, ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+  svm.tune.lda.pred <- predict(svm.tune.lda$best.model , X.lda.testfold)
   svm.tune.lda.perf <- table(factor(y.app[folds==i]),svm.tune.lda.pred)
   svm.tune.lda.error <-svm.tune.lda.error + 1 - sum(diag(svm.tune.lda.perf))/numberTest
   
   # Naive Bayesien
-  nb.lda <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data[folds!=i,]))
-  nb.lda.pred <- predict(nb.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
+  nb.lda <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data))
+  nb.lda.pred <- predict(nb.lda,newdata=as.data.frame(X.lda.testfold))
   nb.lda.perf <- table(factor(y.app[folds==i]),nb.lda.pred)
   nb.lda.error <-nb.lda.error + 1 - sum(diag(nb.lda.perf))/numberTest
   
   # RegLog
   logReg.lda.res<-c(rep(0,numberTest))
-  logReg.lda <- glmnet(X.lda.data[folds!=i,] ,y=y.app[folds!=i],family="multinomial")
-  logReg.lda.pred <- predict(logReg.lda,newx=X.lda.data[folds==i,],type="response",s=logReg.lda$lambda.min)
+  logReg.lda <- glmnet(X.lda.data ,y=y.app[folds!=i],family="multinomial")
+  logReg.lda.pred <- predict(logReg.lda,newx=X.lda.testfold,type="response",s=logReg.lda$lambda.min)
   
   for (h in 1:numberTest) {
     logReg.lda.res[h] <-which.max(logReg.lda.pred[h,1:6,dim(logReg.lda.pred)[3] -1])
@@ -450,21 +451,21 @@ for(i in 1:K){
   logReg.lda.error <-logReg.lda.error + 1 - sum(diag(logReg.lda.perf))/numberTest
   
   # LDA
-  lda.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.lda.data[folds!=i,]))
-  lda.lda.pred <- predict(lda.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
+  lda.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.lda.data))
+  lda.lda.pred <- predict(lda.lda,newdata=as.data.frame(X.lda.testfold))
   lda.lda.perf <- table(y.app[folds==i],lda.lda.pred$class)
   lda.lda.error <-lda.lda.error + 1 - sum(diag(lda.lda.perf))/numberTest
   
   # KNN
   for(number in 1:numberKnn){
-    knn.lda <- knn(as.data.frame(X.lda.data[folds!=i,]), as.data.frame(X.lda.data[folds==i,]), y.app[folds!=i],k=number)
+    knn.lda <- knn(as.data.frame(X.lda.data), as.data.frame(X.lda.testfold), y.app[folds!=i],k=number)
     knn.lda.perf <- table(y.app[folds==i], knn.lda)
     knn.lda.error[number] <-knn.lda.error[number]  + 1 - sum(diag(knn.lda.perf))/numberTest 
   }
   
   # Neural Network
-  data.train = X.lda.data[folds!=i,]
-  data.test = X.lda.data[folds==i,]
+  data.train = X.lda.data
+  data.test = X.lda.testfold
   y.train = y.app[folds!=i]
   y.testfold = y.app[folds==i]
   ordre = c(1:dim(data.train)[2])
@@ -543,8 +544,8 @@ for(i in 1:K){
   }
   
   # FDA
-  qda.lda <- qda(y.app[folds!=i]~., data=as.data.frame(X.lda.data[folds!=i,]))
-  qda.lda.pred <- predict(qda.lda,newdata=as.data.frame(X.lda.data[folds==i,]))
+  qda.lda <- qda(y.app[folds!=i]~., data=as.data.frame(X.lda.data))
+  qda.lda.pred <- predict(qda.lda,newdata=as.data.frame(X.lda.testfold))
   qda.lda.perf <- table(y.app[folds==i],qda.lda.pred$class)
   qda.lda.error <-qda.lda.error + 1 - sum(diag(qda.lda.perf))/numberTest
 }
