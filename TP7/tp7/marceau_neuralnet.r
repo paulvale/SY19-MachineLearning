@@ -132,10 +132,6 @@ ideal <- class.ind(y.app)
 # essayons maintenant avec l'algorithme de backproagation -- 31,19% contre 34,76 % pour l'autre methode,  je vais donc garder cette méthode, meme si l'autre est plus performante en terme de temps
 
 
-
-
-
-
 # ce qu'il faut faire :
 # 	- une validation croisée pour trouver le nombre de neuronnes cachés a garder
 # 	- implementer la stepwise forward selection sur l'acp dans notre validation
@@ -145,88 +141,100 @@ ideal <- class.ind(y.app)
 
 K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
 folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
-acpF.error.net <- rep(0,10)
-acp1.error.net <- rep(0,10)
-acp2.error.net <- rep(0,10)
-fda.error.net <- rep(0,10)
-forward.error.net.tot <- rep(0,10)
-forward.error.net <- rep(0,59)
+acp1.error.net <- rep(0,13)
+acp2.error.net <- rep(0,13)
+fda.error.net <- rep(0,13)
+forward.error.net.tot <- rep(0,13)
+forward.error.net <- matrix(nrow=13, ncol=59,0)
+fda.error.neuralnetNoBP <- rep(0,13)
+fda.error.neuralnetBP <- rep(0,13)
+fda.error.neuralnetNoBP2 <- rep(0,7)
+fda.error.neuralnetBP2 <- rep(0,7)
+acp1.error.neuralnet <- rep(0,13)
 
+c1<-0
+c2<-0
+c3<-0
+c4<-0
+c5<-0
+c6<-0
+
+for (neurone in 3:15)
+{
+	cat("neurone : ", neurone," sur 15\n")
 	for(i in 1:K){
 
-		numberTest <- dim(X.acp.transform1[folds==i,])[1]
-		ideal <- class.ind(y.app[folds!=i])
+		  print("===")
+		  print(i)
+		  print("===")
+		  # ====
+		  # Reduction de la dimensionnalite des variables
+		  # ===
+		  # 1) FDA
+		  X.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.app[folds!=i,]))
+		  X.lda.data <- X.app[folds!=i,]%*%X.lda$scaling
+		  X.lda.testfold <- X.app[folds==i,]%*%X.lda$scaling
+
+		  numberTest <- dim(X.lda.testfold)[1]
+		  ideal <- class.ind(y.app[folds!=i])
+
+
+		# ---------------------------------------------------
+		# ----- Neural network  avec NNET  et softmax -------
+		# ---------------------------------------------------
 
 		# ------ ACP 1 ------
-		acp1.fit.net <- nnet(X.acp.transform1[folds!=i,], ideal, size=9, softmax=TRUE)
+		acp1.fit.net <- nnet(X.acp.transform1[folds!=i,], ideal, size=neurone, softmax=TRUE)
 		acp1.predict.net <- predict(acp1.fit.net, X.acp.transform1[folds==i,], type="class")
 		acp1.perf.net <- table(acp1.predict.net,y.app[folds==i])
-		acp1.error.net <-acp1.error.net + 1-sum(diag(acp1.perf.net))/numberTest
+		acp1.error.net[neurone-2] <-acp1.error.net[neurone-2] + 1-sum(diag(acp1.perf.net))/numberTest
 
 		# ------ ACP 2 ------
-		acp2.fit.net <- nnet(X.acp.transform2[folds!=i,], ideal, size=9, softmax=TRUE)
+		acp2.fit.net <- nnet(X.acp.transform2[folds!=i,], ideal, size=neurone, softmax=TRUE)
 		acp2.predict.net <- predict(acp2.fit.net, X.acp.transform2[folds==i,], type="class")
 		acp2.perf.net <- table(acp2.predict.net,y.app[folds==i])
-		acp2.error.net <-acp2.error.net + 1-sum(diag(acp2.perf.net))/numberTest
+		acp2.error.net[neurone-2] <-acp2.error.net[neurone-2] + 1-sum(diag(acp2.perf.net))/numberTest
 
 		# ------ full ne marche pas -------
 
 		# ------ FDA ------ 
-		fda.fit.net <- nnet(X.lda.transform[folds!=i,], ideal, size=9, softmax=TRUE)
-		fda.predict.net <- predict(fda.fit.net, X.lda.transform[folds==i,], type="class")
+		fda.fit.net <- nnet(X.lda.data, ideal, size=neurone, softmax=TRUE)
+		fda.predict.net <- predict(fda.fit.net, X.lda.testfold, type="class")
 		fda.perf.net <- table(fda.predict.net,y.app[folds==i])
-		fda.error.net <-fda.error.net + 1-sum(diag(fda.perf.net))/numberTest
+		fda.error.net[neurone-2] <-fda.error.net[neurone-2] + 1-sum(diag(fda.perf.net))/numberTest
 
 		# ------ FORWARD ------
 		for(j in 2: 60){
 			X.acp.forward <- X.acp$x[,1:j]
-			forward.fit.net <- nnet(X.acp.forward[folds!=i,], ideal, size=9, softmax=TRUE)
+			forward.fit.net <- nnet(X.acp.forward[folds!=i,], ideal, size=neurone, softmax=TRUE)
 			forward.predict.net <- predict(forward.fit.net, X.acp.forward[folds==i,], type="class")
 			forward.perf.net <- table(forward.predict.net,y.app[folds==i])
-			forward.error.net[j-1] <-1-sum(diag(forward.perf.net))/numberTest
+			forward.error.net[neurone-2,j-1] <-1-sum(diag(forward.perf.net))/numberTest
 		}
 		plot(forward.error.net,type="l")
-		forward.error.net.tot <-forward.error.net.tot + min(forward.error.net[0:59])
+		forward.error.net.tot[neurone-2] <-forward.error.net.tot[neurone-2] + min(forward.error.net[neurone-2,0:59])
 
-	}
+		# ----------------------------------------------------
+		# ----- Neural network  avec NNET  et sigmoide -------
+		# ----------------------------------------------------
 
-	# Diviser le taux d'erreur par le nombre de K 
-	acp1.error.net <-(acp1.error.net/K)*100
-	acp2.error.net <-(acp2.error.net/K)*100
-	fda.error.net <-(fda.error.net/K)*100
-	forward.error.net.tot <-(forward.error.net.tot/K)*100
-
-	print(acp1.error.net)
-	print(acp2.error.net)
-	print(fda.error.net)
-	print(forward.error.net.tot)
-
-
-# les meilleurs résultats sont pour size = 9 et le FDA. On a fait tourner une boucle de 5 a 15 noeuds cachés
-
-
-
-
-# ----------- deuxieme essai avec une autre méthode par neuralnet et biclass ----------------
-
-# cette fois ci on essaie pas juste le acp1 et on se rend compte que le fda fait de bien meilleurs résultats, on laisse tombé d'autant plus que les resultats sont limités de par le nombre de variables autorisés a prendre
-# on obtient une erreur recurente lorsuq"on lance trop de fois neuralnet a la suite avec des jeux de valuers qui diffrents
-
-
-K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
-folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
-acp1.error.neuralnet <- rep(0,K)
-fda.error.neuralnet <- rep(0,K)
-
-	for(i in 1:K){
+		# --------------------------------------------
+		# ----- Neural network  avec NEURALNET -------
+		# --------------------------------------------
 
 		# ---------- FDA -----------------------
-		print("fda")
-		data.train = X.lda.transform[folds!=i,]
-		data.test = X.lda.transform[folds==i,]
+		print("fda avec backprop")
+		data.train = X.lda.data
+		data.test = X.lda.testfold
 		y.train = y.app[folds!=i]
 		y.testfold = y.app[folds==i]
 		ordre = c(1:dim(data.train)[2])
+		neuralnet1<-0
+		neuralnet2<-0
+		neuralnet3<-0
+		neuralnet4<-0
+		neuralnet5<-0
+		neuralnet6<-0
 
 
 			for(k in 1:6){
@@ -240,39 +248,33 @@ fda.error.neuralnet <- rep(0,K)
 				formule = getFormulas(colnames(newDataSet), ordre,"response")
 				if(k==1)
 				{
-					print("1/6")
-					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn1 <- ifelse(neuralnet1$net.result[[1]]>0.5,1,0)
 
 				}
 				else if( k==2)
 				{
-					print("2/6")
-					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn2 <- ifelse(neuralnet2$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==3){
-					print("3/6")
-					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn3 <- ifelse(neuralnet3$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==4){
-					print("4/6")
-					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn4 <- ifelse(neuralnet4$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==5){
-					print("5/6")
-					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn5 <- ifelse(neuralnet5$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==6){
-					print("6/6")
-					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn6 <- ifelse(neuralnet6$net.result[[1]]>0.5,1,0)
 
 				}
@@ -281,12 +283,24 @@ fda.error.neuralnet <- rep(0,K)
 
 			# predictions 
 
-			c1<-compute(neuralnet1,as.matrix(data.test))
-			c2<-compute(neuralnet2,as.matrix(data.test))
-			c3<-compute(neuralnet3,as.matrix(data.test))
-			c4<-compute(neuralnet4,as.matrix(data.test))
-			c5<-compute(neuralnet5,as.matrix(data.test))
-			c6<-compute(neuralnet6,as.matrix(data.test))
+			if(!is.null(neuralnet1$net.result)){
+				c1<-compute(neuralnet1,as.matrix(data.test))
+			} else {c1$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet2$net.result)){
+				c2<-compute(neuralnet2,as.matrix(data.test))
+			} else {c2$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet3$net.result)){
+				c3<-compute(neuralnet3,as.matrix(data.test))
+			} else {c3$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet4$net.result)){
+				c4<-compute(neuralnet4,as.matrix(data.test))
+			} else {c4$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet5$net.result)){
+				c5<-compute(neuralnet5,as.matrix(data.test))
+			} else {c5$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet6$net.result)){
+				c6<-compute(neuralnet6,as.matrix(data.test))
+			} else {c6$net.result<-rep(0,dim(data.test)[1])}
 
 			neuralnet.result <- rep(0,dim(data.test)[1])
 
@@ -295,13 +309,102 @@ fda.error.neuralnet <- rep(0,K)
 				neuralnet.result[j] <- index
 			}
 			neuralnet.perf <- table(neuralnet.result,y.testfold)
-			fda.error.neuralnet[i] <-  1-sum(diag(neuralnet.perf))/length(y.testfold)
-			print(1-sum(diag(neuralnet.perf))/length(y.testfold))
+			fda.error.neuralnetBP[neurone-2] <- fda.error.neuralnetBP[neurone-2]+  1-sum(diag(neuralnet.perf))/length(y.testfold)
 
+
+
+		# ------------- FDA sans backprop --------------
+
+		print("FDA sans backprog")
+		neuralnet1<-0
+		neuralnet2<-0
+		neuralnet3<-0
+		neuralnet4<-0
+		neuralnet5<-0
+		neuralnet6<-0
+			for(k in 1:6){
+				response <- rep(0,length(y.train))
+				for(j in 1:length(y.train)){
+					if(y.train[j]==k){
+						response[j]=1
+					}
+				}
+				newDataSet <- data.frame(data.train,response)
+				formule = getFormulas(colnames(newDataSet), ordre,"response")
+				if(k==1)
+				{
+					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone, err.fct="ce",linear.output=FALSE)
+					nn1 <- ifelse(neuralnet1$net.result[[1]]>0.5,1,0)
+
+				}
+				else if( k==2)
+				{
+					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,err.fct="ce",linear.output=FALSE)
+					nn2 <- ifelse(neuralnet2$net.result[[1]]>0.5,1,0)
+
+				}
+				else if(k==3){
+					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,err.fct="ce",linear.output=FALSE)
+					nn3 <- ifelse(neuralnet3$net.result[[1]]>0.5,1,0)
+
+				}
+				else if(k==4){
+					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,err.fct="ce",linear.output=FALSE)
+					nn4 <- ifelse(neuralnet4$net.result[[1]]>0.5,1,0)
+
+				}
+				else if(k==5){
+					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,err.fct="ce",linear.output=FALSE)
+					nn5 <- ifelse(neuralnet5$net.result[[1]]>0.5,1,0)
+
+				}
+				else if(k==6){
+					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=neurone,err.fct="ce",linear.output=FALSE)
+					nn6 <- ifelse(neuralnet6$net.result[[1]]>0.5,1,0)
+
+				}
+				
+			}
+
+			# predictions 
+
+			if(!is.null(neuralnet1$net.result)){
+				c1<-compute(neuralnet1,as.matrix(data.test))
+			} else {c1$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet2$net.result)){
+				c2<-compute(neuralnet2,as.matrix(data.test))
+			} else {c2$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet3$net.result)){
+				c3<-compute(neuralnet3,as.matrix(data.test))
+			} else {c3$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet4$net.result)){
+				c4<-compute(neuralnet4,as.matrix(data.test))
+			} else {c4$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet5$net.result)){
+				c5<-compute(neuralnet5,as.matrix(data.test))
+			} else {c5$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet6$net.result)){
+				c6<-compute(neuralnet6,as.matrix(data.test))
+			} else {c6$net.result<-rep(0,dim(data.test)[1])}
+
+			neuralnet.result <- rep(0,dim(data.test)[1])
+
+			for(j in 1:dim(data.test)[1]){
+				index <- which.max(c(c1$net.result[j],c2$net.result[j],c3$net.result[j],c4$net.result[j],c5$net.result[j],c6$net.result[j]))
+				neuralnet.result[j] <- index
+			}
+			neuralnet.perf <- table(neuralnet.result,y.testfold)
+			fda.error.neuralnetNoBP[neurone-2] <-fda.error.neuralnetNoBP[neurone-2]+ 1-sum(diag(neuralnet.perf))/length(y.testfold)
 
 
 		# ------------- ACP1 --------------
-		print("acp")
+		print("acp1")
+		neuralnet1<-0
+		neuralnet2<-0
+		neuralnet3<-0
+		neuralnet4<-0
+		neuralnet5<-0
+		neuralnet6<-0
 		data.train = X.acp.transform1[folds!=i,]
 		data.test = X.acp.transform1[folds==i,]
 		y.train = y.app[folds!=i]
@@ -320,38 +423,32 @@ fda.error.neuralnet <- rep(0,K)
 				formule = getFormulas(colnames(newDataSet), ordre,"response")
 				if(k==1)
 				{
-					print("1/6")
 					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
 					nn1 <- ifelse(neuralnet1$net.result[[1]]>0.5,1,0)
 
 				}
 				else if( k==2)
 				{
-					print("2/6")
 					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
 					nn2 <- ifelse(neuralnet2$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==3){
-					print("3/6")
 					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
 					nn3 <- ifelse(neuralnet3$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==4){
-					print("4/6")
 					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
 					nn4 <- ifelse(neuralnet4$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==5){
-					print("5/6")
 					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
 					nn5 <- ifelse(neuralnet5$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==6){
-					print("6/6")
 					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
 					nn6 <- ifelse(neuralnet6$net.result[[1]]>0.5,1,0)
 
@@ -361,12 +458,24 @@ fda.error.neuralnet <- rep(0,K)
 
 			# predictions 
 
-			c1<-compute(neuralnet1,as.matrix(data.test))
-			c2<-compute(neuralnet2,as.matrix(data.test))
-			c3<-compute(neuralnet3,as.matrix(data.test))
-			c4<-compute(neuralnet4,as.matrix(data.test))
-			c5<-compute(neuralnet5,as.matrix(data.test))
-			c6<-compute(neuralnet6,as.matrix(data.test))
+			if(!is.null(neuralnet1$net.result)){
+				c1<-compute(neuralnet1,as.matrix(data.test))
+			} else {c1$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet2$net.result)){
+				c2<-compute(neuralnet2,as.matrix(data.test))
+			} else {c2$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet3$net.result)){
+				c3<-compute(neuralnet3,as.matrix(data.test))
+			} else {c3$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet4$net.result)){
+				c4<-compute(neuralnet4,as.matrix(data.test))
+			} else {c4$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet5$net.result)){
+				c5<-compute(neuralnet5,as.matrix(data.test))
+			} else {c5$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet6$net.result)){
+				c6<-compute(neuralnet6,as.matrix(data.test))
+			} else {c6$net.result<-rep(0,dim(data.test)[1])}
 
 			neuralnet.result <- rep(0,dim(data.test)[1])
 
@@ -375,47 +484,61 @@ fda.error.neuralnet <- rep(0,K)
 				neuralnet.result[j] <- index
 			}
 			neuralnet.perf <- table(neuralnet.result,y.testfold)
-			acp1.error.neuralnet[i] <- 1-sum(diag(neuralnet.perf))/length(y.testfold)
-			print(1-sum(diag(neuralnet.perf))/length(y.testfold))
+			acp1.error.neuralnet[neurone-2] <-acp1.error.neuralnet[neurone-2]+ 1-sum(diag(neuralnet.perf))/length(y.testfold)
+
 	}
+}
 
-print(mean(fda.error.neuralnet))
-
-# Nous choisissons donc de prendre 5 neuronnes cachés et nous avons autour de 6.5% d erreur
-# on essaye une deuxieme couche de neuronnes cachés, on est sur du 6% d erreur avec du 3,3, ou du 4,3 c'est pareil
-
-# couche de neuronnes cachés :
-# nous avons lancé plusieurs fois une boucle pour connaitre le nombre de neuronnes optimal a garder lorsuq'on considere norte reseau a 
-# une seule couche de neuronne caché : les meilleurs résultats etaient lorsuq'on gardait entre 3 et 5 neurones.
-# avec 4 on est : 8.1% - 6.8% - 11.6% - 9.5% - 8.4%
-# avec 3 on est : 7.5% - 5.8% - 6.1% - 6.5% - 6.7%
-# avec 5 on est : 8.8% - 9.7% - 6.4% - 7.3% - 10%
-# avec 2 on est : 6.16% - 5.7% - 8.8% - 7.7% - 6.3%
-#  on remarque qu'en moyenne les résultats sont meilleurs avec 3 neuronnes dans la premiere couche cachée
-
-# nous avons donc décidé d'essayer de rajouter une deuxieme couche de neuronnes cachés pour observer des changement ou une amélioratin de résultat qi poqqible
-# avec (3,2) on est : 5% - 12% - 8.3% - 6.6% - 10% - 7.3%
-# avec (3,3) on est : 7.8% - 8.7% - 6.7% - 9.4% - 9.15%
-# avec (3,4) on est : 8.7% - 8.3% - 8.6% - 11.2% - 9.9%
-
-# d'apres les resultats suiovant nous décidons de prendre une couche cachée constituée de 3neuronnes
+	# Diviser le taux d'erreur par le nombre de K 
+	acp1.error.net <-(acp1.error.net/K)*100
+	acp2.error.net <-(acp2.error.net/K)*100
+	fda.error.net <-(fda.error.net/K)*100
+	forward.error.net.tot <-(forward.error.net.tot/K)*100
+	fda.error.neuralnetNoBP <- (fda.error.neuralnetNoBP/K)*100
+	fda.error.neuralnetBP <- (fda.error.neuralnetBP/K)*100
+	acp1.error.neuralnet <- (acp1.error.neuralnet/K)*100
 
 
-# -------------------lors de ce dernier essai on va tenter de prendre l'algorithme de backpropagation avec la méthode la plus performante --> FDA
+	neuroneNoBP1<- which.min(fda.error.neuralnetNoBP[1:11])+2
+	neuroneBP1<-which.min(fda.error.neuralnetBP[1:11])+2
 
+	cat("[NEURALNET] Neurone optimal BP : ",neuroneBP1,", avec une erreur de : ",fda.error.neuralnetBP[neuroneBP1-2])
+	cat("[NEURALNET] Neurone optimal No BP : ",neuroneNoBP1,", avec une erreur de : ",fda.error.neuralnetNoBP[neuroneNoBP1-2])
+	cat("[NEURALNET] Neurone optimal ACP : ",which.min(acp1.error.neuralnet)+2,", avec une erreur de : ",acp1.error.neuralnet[which.min(acp1.error.neuralnet)])
+	cat("[NNET] Neurone optimal pour ACP1 : ",which.min(acp1.error.net)+2,", avec une erreur de : ",acp1.error.net[which.min(acp1.error.net)])
+	cat("[NNET] Neurone optimal pour ACP2 : ",which.min(acp2.error.net)+2,", avec une erreur de : ",acp2.error.net[which.min(acp2.error.net)])
+	cat("[NNET] Neurone optimal pour Forward : ",which.min(forward.error.net.tot)+2,", avec une erreur de : ",forward.error.net.tot[which.min(forward.error.net.tot)])
+	cat("[NNET] Neurone optimal pour FDA : ",which.min(fda.error.net)+2,", avec une erreur de : ",fda.error.net[which.min(fda.error.net)])
 
+# resultats :
 
-K <- 5 # Nombre de sections dans notre ensemble d'apprentissage
-folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
-fda.error.neuralnetNoBP <- rep(0,K)
-fda.error.neuralnetBP <- rep(0,K)
+# neuralnet :
+#- LDA + BP : 26.68472704 avec 13 neurones
+#- LDA  : 23.78331472 avec 11 neurones
+#- ACP : 44.52610135 avec 9 neurones
 
+# nnet :
+#- ACP1 : 42.71477542 avec 10 neurones
+#- ACP2 : 41.82108088 avec 13 neurones
+#- forward : 27.80793716 avec 13 neurones
+#- LDA : 30.69334587 avec 10 neurones
+for(neurone2 in 3:9)
+{
+	cat("neurone : ", neurone2," sur 15\n")
 	for(i in 1:K){
 
+		  print("===")
+		  print(i)
+		  print("===")
+
+		  X.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.app[folds!=i,]))
+		  X.lda.data <- X.app[folds!=i,]%*%X.lda$scaling
+		  X.lda.testfold <- X.app[folds==i,]%*%X.lda$scaling
+
+
 		# ---------- FDA -----------------------
-		print("fda")
-		data.train = X.lda.transform[folds!=i,]
-		data.test = X.lda.transform[folds==i,]
+		data.train = X.lda.data
+		data.test = X.lda.testfold
 		y.train = y.app[folds!=i]
 		y.testfold = y.app[folds==i]
 		ordre = c(1:dim(data.train)[2])
@@ -432,39 +555,33 @@ fda.error.neuralnetBP <- rep(0,K)
 				formule = getFormulas(colnames(newDataSet), ordre,"response")
 				if(k==1)
 				{
-					print("1/6")
-					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
+					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneBP1,neurone2),algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn1 <- ifelse(neuralnet1$net.result[[1]]>0.5,1,0)
 
 				}
 				else if( k==2)
 				{
-					print("2/6")
-					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
+					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneBP1,neurone2),algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn2 <- ifelse(neuralnet2$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==3){
-					print("3/6")
-					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
+					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneBP1,neurone2),algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn3 <- ifelse(neuralnet3$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==4){
-					print("4/6")
-					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
+					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneBP1,neurone2),algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn4 <- ifelse(neuralnet4$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==5){
-					print("5/6")
-					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
+					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneBP1,neurone2),algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn5 <- ifelse(neuralnet5$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==6){
-					print("6/6")
-					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
+					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneBP1,neurone2),algorithm="backprop",learningrate=0.01,err.fct="ce",linear.output=FALSE)
 					nn6 <- ifelse(neuralnet6$net.result[[1]]>0.5,1,0)
 
 				}
@@ -473,12 +590,24 @@ fda.error.neuralnetBP <- rep(0,K)
 
 			# predictions 
 
-			c1<-compute(neuralnet1,as.matrix(data.test))
-			c2<-compute(neuralnet2,as.matrix(data.test))
-			c3<-compute(neuralnet3,as.matrix(data.test))
-			c4<-compute(neuralnet4,as.matrix(data.test))
-			c5<-compute(neuralnet5,as.matrix(data.test))
-			c6<-compute(neuralnet6,as.matrix(data.test))
+			if(!is.null(neuralnet1$net.result)){
+				c1<-compute(neuralnet1,as.matrix(data.test))
+			} else {c1$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet2$net.result)){
+				c2<-compute(neuralnet2,as.matrix(data.test))
+			} else {c2$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet3$net.result)){
+				c3<-compute(neuralnet3,as.matrix(data.test))
+			} else {c3$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet4$net.result)){
+				c4<-compute(neuralnet4,as.matrix(data.test))
+			} else {c4$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet5$net.result)){
+				c5<-compute(neuralnet5,as.matrix(data.test))
+			} else {c5$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet6$net.result)){
+				c6<-compute(neuralnet6,as.matrix(data.test))
+			} else {c6$net.result<-rep(0,dim(data.test)[1])}
 
 			neuralnet.result <- rep(0,dim(data.test)[1])
 
@@ -487,8 +616,7 @@ fda.error.neuralnetBP <- rep(0,K)
 				neuralnet.result[j] <- index
 			}
 			neuralnet.perf <- table(neuralnet.result,y.testfold)
-			fda.error.neuralnetBP[i] <-  1-sum(diag(neuralnet.perf))/length(y.testfold)
-			print(1-sum(diag(neuralnet.perf))/length(y.testfold))
+			fda.error.neuralnetBP2[neurone2-2] <- fda.error.neuralnetBP2[neurone2-2]+  1-sum(diag(neuralnet.perf))/length(y.testfold)
 
 
 
@@ -512,53 +640,56 @@ fda.error.neuralnetBP <- rep(0,K)
 				formule = getFormulas(colnames(newDataSet), ordre,"response")
 				if(k==1)
 				{
-					print("1/6")
-					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneNoBP1,neurone2), err.fct="ce",linear.output=FALSE)
 					nn1 <- ifelse(neuralnet1$net.result[[1]]>0.5,1,0)
 
 				}
 				else if( k==2)
 				{
-					print("2/6")
-					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneNoBP1,neurone2),err.fct="ce",linear.output=FALSE)
 					nn2 <- ifelse(neuralnet2$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==3){
-					print("3/6")
-					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneNoBP1,neurone2),err.fct="ce",linear.output=FALSE)
 					nn3 <- ifelse(neuralnet3$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==4){
-					print("4/6")
-					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneNoBP1,neurone2),err.fct="ce",linear.output=FALSE)
 					nn4 <- ifelse(neuralnet4$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==5){
-					print("5/6")
-					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneNoBP1,neurone2),err.fct="ce",linear.output=FALSE)
 					nn5 <- ifelse(neuralnet5$net.result[[1]]>0.5,1,0)
 
 				}
 				else if(k==6){
-					print("6/6")
-					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+					neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(neuroneNoBP1,neurone2),err.fct="ce",linear.output=FALSE)
 					nn6 <- ifelse(neuralnet6$net.result[[1]]>0.5,1,0)
 
 				}
 				
 			}
-
-			# predictions 
-
-			c1<-compute(neuralnet1,as.matrix(data.test))
-			c2<-compute(neuralnet2,as.matrix(data.test))
-			c3<-compute(neuralnet3,as.matrix(data.test))
-			c4<-compute(neuralnet4,as.matrix(data.test))
-			c5<-compute(neuralnet5,as.matrix(data.test))
-			c6<-compute(neuralnet6,as.matrix(data.test))
+			if(!is.null(neuralnet1$net.result)){
+				c1<-compute(neuralnet1,as.matrix(data.test))
+			} else {c1$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet2$net.result)){
+				c2<-compute(neuralnet2,as.matrix(data.test))
+			} else {c2$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet3$net.result)){
+				c3<-compute(neuralnet3,as.matrix(data.test))
+			} else {c3$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet4$net.result)){
+				c4<-compute(neuralnet4,as.matrix(data.test))
+			} else {c4$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet5$net.result)){
+				c5<-compute(neuralnet5,as.matrix(data.test))
+			} else {c5$net.result<-rep(0,dim(data.test)[1])}
+			if(!is.null(neuralnet6$net.result)){
+				c6<-compute(neuralnet6,as.matrix(data.test))
+			} else {c6$net.result<-rep(0,dim(data.test)[1])}
 
 			neuralnet.result <- rep(0,dim(data.test)[1])
 
@@ -567,12 +698,57 @@ fda.error.neuralnetBP <- rep(0,K)
 				neuralnet.result[j] <- index
 			}
 			neuralnet.perf <- table(neuralnet.result,y.testfold)
-			fda.error.neuralnetNoBP[i] <- 1-sum(diag(neuralnet.perf))/length(y.testfold)
-			print(1-sum(diag(neuralnet.perf))/length(y.testfold))
-	}
+			fda.error.neuralnetNoBP2[neurone2-2] <-fda.error.neuralnetNoBP2[neurone2-2]+ 1-sum(diag(neuralnet.perf))/length(y.testfold)
+		}
 
-print(mean(fda.error.neuralnetBP))
-print(mean(fda.error.neuralnetNoBP))
+}
+#fda.error.neuralnetNoBP2<- (fda.error.neuralnetNoBP2/K)*100
+fda.error.neuralnetBP2<- (fda.error.neuralnetBP2/K)*100
+
+fda.error.neuralnetNoBP2<- c(8.730250142,10.444535856,9.259877378,7.972341384,10.420559832,9.243070655,10.471998590)
+
+	neuroneNoBP2<- which.min(fda.error.neuralnetNoBP2)+2
+	neuroneBP2<-which.min(fda.error.neuralnetBP2)+2
+
+	cat("[NEURALNET] Neurone 2 optimal BP : ",neuroneBP2,", avec une erreur de : ",fda.error.neuralnetBP2[neuroneBP2-2])
+	cat("[NEURALNET] Neurone 2 optimal No BP : ",neuroneNoBP2,", avec une erreur de : ",fda.error.neuralnetNoBP2[neuroneNoBP2-2])
+
+# résultats :
+# -LDA + BP : 28.66541302% avec 8 neurones
+# -LDA : 7.972341384 avec 6 neurones
+
+# les meilleurs résultats sont pour size = 9 et le FDA. On a fait tourner une boucle de 5 a 15 noeuds cachés
+
+
+
+
+# ----------- deuxieme essai avec une autre méthode par neuralnet et biclass ---------------- 
+
+# cette fois ci on essaie pas juste le acp1 et on se rend compte que le fda fait de bien meilleurs résultats, on laisse tombé d'autant plus que les resultats sont limités de par le nombre de variables autorisés a prendre
+# on obtient une erreur recurente lorsuq"on lance trop de fois neuralnet a la suite avec des jeux de valuers qui diffrents
+
+
+# Nous choisissons donc de prendre 5 neuronnes cachés et nous avons autour de 6.5% d erreur
+# on essaye une deuxieme couche de neuronnes cachés, on est sur du 6% d erreur avec du 3,3, ou du 4,3 c'est pareil
+
+# couche de neuronnes cachés :
+# nous avons lancé plusieurs fois une boucle pour connaitre le nombre de neuronnes optimal a garder lorsuq'on considere norte reseau a 
+# une seule couche de neuronne caché : les meilleurs résultats etaient lorsuq'on gardait entre 3 et 5 neurones.
+# avec 4 on est : 8.1% - 6.8% - 11.6% - 9.5% - 8.4%
+# avec 3 on est : 7.5% - 5.8% - 6.1% - 6.5% - 6.7%
+# avec 5 on est : 8.8% - 9.7% - 6.4% - 7.3% - 10%
+# avec 2 on est : 6.16% - 5.7% - 8.8% - 7.7% - 6.3%
+#  on remarque qu'en moyenne les résultats sont meilleurs avec 3 neuronnes dans la premiere couche cachée
+
+# nous avons donc décidé d'essayer de rajouter une deuxieme couche de neuronnes cachés pour observer des changement ou une amélioratin de résultat qi poqqible
+# avec (3,2) on est : 5% - 12% - 8.3% - 6.6% - 10% - 7.3%
+# avec (3,3) on est : 7.8% - 8.7% - 6.7% - 9.4% - 9.15%
+# avec (3,4) on est : 8.7% - 8.3% - 8.6% - 11.2% - 9.9%
+
+# d'apres les resultats suiovant nous décidons de prendre une couche cachée constituée de 3neuronnes
+
+
+# -------------------lors de ce dernier essai on va tenter de prendre l'algorithme de backpropagation avec la méthode la plus performante --> FDA
 
 # premiere iteration 6.5% - 4.6% - 10.13% - 6.8% - 5.77% - 8.7%
 
