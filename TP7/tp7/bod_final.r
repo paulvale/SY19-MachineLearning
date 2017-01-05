@@ -118,30 +118,45 @@ nn.lda.error <- 0
 nn.forward.error <- rep(0, 159)
 
 depart <- Sys.time()
+# ====
+# Reduction de la dimensionnalite des variables
+# ===
+# 1) ACP
+X.acp <- prcomp(X.app)
+X.acp.data <- X.acp$x[,1:160] 
+
+# 2) Forward/Backward Selection on ACP
+reg.fit<-regsubsets(y.app~.,data=as.data.frame(X.acp.data),method="forward")
+vorder <- reg.fit$vorder[2:length(reg.fit$vorder)]
+vorder <- vorder - 1
+X.forward.data <- X.acp.data[,vorder[1]]
+X.forward.data <- as.data.frame(X.forward.data)
+names(X.forward.data)[1] <- colnames(X.acp.data)[vorder[1]]
+
+for(i in 2:160){
+  X.forward.data[[colnames(X.acp.data)[vorder[i]]]] <- X.acp.data[,vorder[i]]
+}
+
+# 3) Forward on Data 
+reg.fit2 <- regsubsets(y.app~., data=as.data.frame(X.app), method="forward")
+vorder2 <- reg.fit2$vorder[2:length(reg.fit2$vorder)]
+vorder2 <- vorder2 - 1
+X.f.data <- X.app[,vorder2[1]]
+X.f.data <- as.data.frame(X.f.data)
+for(i in 2:160){
+  X.f.data[i] <- X.app[,vorder2[i]]
+}
 
 for(i in 1:K){
   print("===")
   print(i)
   print("===")
-  # ====
-  # Reduction de la dimensionnalite des variables
-  # ===
-  # 1) FDA
+
+  # 4) FDA
   X.lda <- lda(y.app[folds!=i]~., data=as.data.frame(X.app[folds!=i,]))
   X.lda.data <- X.app[folds!=i,]%*%X.lda$scaling
   X.lda.testfold <- X.app[folds==i,]%*%X.lda$scaling
   
-  # 2) ACP
-  X.acp <- prcomp(X.app)
-  X.acp.data <- X.acp$x[,1:160] 
-  
-  # 3) Forward/Backward Selection
-  reg.fit<-regsubsets(y.app~.,data=as.data.frame(X.acp.data),method="forward", intercept=FALSE)
-  #plot(reg.fit)
-  X.forward.data <- X.acp.data[,which(reg.fit$vorder == 1)]
-  X.forward.data <- as.data.frame(X.forward.data)
-  names(X.forward.data)[1] <- colnames(X.acp.data)[which(reg.fit$vorder == 1)]
-
   numberTest <- dim(X.lda.testfold)[1]
   y.app.factor <- factor(y.app[folds!=i])
   y.test.factor <- factor(y.app[folds==i])
@@ -282,8 +297,6 @@ for(i in 1:K){
   print("Forward")
   for(j in 2:160){
     print(j)
-    X.forward.data[[colnames(X.acp.data)[which(reg.fit$vorder == j)]]] <- X.acp.data[,which(reg.fit$vorder == j)]
-
     # LDA
     lda.forward <- lda(y.app[folds!=i]~., data=as.data.frame(X.forward.data[folds!=i,1:j]))
     lda.forward.pred <- predict(lda.forward,newdata=as.data.frame(X.forward.data[folds==i,1:j]))
