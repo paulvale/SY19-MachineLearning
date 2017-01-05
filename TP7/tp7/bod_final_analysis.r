@@ -1,5 +1,5 @@
 rm(list=ls())
-load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/analysis.rData")
+load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/analysis_2.rData")
 
 # KNN
 # Evolution en fonction du nombre de composantes prises en comptes

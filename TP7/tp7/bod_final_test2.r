@@ -51,7 +51,7 @@ nn.acp.error.k5 <- nn.acp.error
 nn.lda.error.k5 <- nn.lda.error
 nn.forward.error.k5 <- nn.forward.error
 
-load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/end_10.rData")
+load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/end_10_2.rData")
 
 vectorTree <- seq(100,1500,100)
 
@@ -133,14 +133,14 @@ rf.app.acp.error.k5 <- min(rf.acp.error.k5)
 ind <- which.min(tree.acp.error)
 tree.test.acp <- tree(factor(y.app)~., data=as.data.frame(X.acp.data[,1:ind]))
 tree.test.acp.pred <- predict(tree.test.acp,newdata=as.data.frame(X.acp.test[,1:ind]), type="class")
-tree.test.acp.perf <- table(y.test,tree.test.acp.pred)
+tree.test.acp.perf <- table(y.test,factor(tree.test.acp.pred, levels=1:6))
 tree.test.acp.error <- (1 - sum(diag(tree.test.acp.perf))/X.test.dim[1])*100
 tree.app.acp.error <- min(tree.acp.error)
 
 ind <- which.min(tree.acp.error.k5)
 tree.test.acp.k5 <- tree(factor(y.app)~., data=as.data.frame(X.acp.data[,1:ind]))
 tree.test.acp.pred.k5 <- predict(tree.test.acp.k5,newdata=as.data.frame(X.acp.test[,1:ind]), type="class")
-tree.test.acp.perf.k5 <- table(y.test,tree.test.acp.pred.k5)
+tree.test.acp.perf.k5 <- table(y.test,factor(tree.test.acp.pred.k5, levels=1:6))
 tree.test.acp.error.k5 <- (1 - sum(diag(tree.test.acp.perf.k5))/X.test.dim[1])*100
 tree.app.acp.error.k5 <- min(tree.acp.error.k5)
 
@@ -148,14 +148,14 @@ tree.app.acp.error.k5 <- min(tree.acp.error.k5)
 ind <- which.min(svm.acp.error)
 svm.test.acp <- svm(X.acp.data[,1:ind],y.app,type="C-classification")
 svm.test.acp.pred <- predict(svm.test.acp, X.acp.test[,1:ind])
-svm.test.acp.perf <- table(factor(y.test),svm.test.acp.pred)
+svm.test.acp.perf <- table(factor(y.test),factor(svm.test.acp.pred, levels=1:6))
 svm.test.acp.error <- (1 - sum(diag(svm.test.acp.perf))/X.test.dim[1])*100
 svm.app.acp.error <- min(svm.acp.error)
 
 ind <- which.min(svm.acp.error.k5)
 svm.test.acp.k5 <- svm(X.acp.data[,1:ind],y.app,type="C-classification")
 svm.test.acp.pred.k5 <- predict(svm.test.acp.k5, X.acp.test[,1:ind])
-svm.test.acp.perf.k5 <- table(factor(y.test),svm.test.acp.pred.k5)
+svm.test.acp.perf.k5 <- table(factor(y.test),factor(svm.test.acp.pred.k5, levels=1:6))
 svm.test.acp.error.k5 <- (1 - sum(diag(svm.test.acp.perf.k5))/X.test.dim[1])*100
 svm.app.acp.error.k5 <- min(svm.acp.error.k5)
 
@@ -163,14 +163,14 @@ svm.app.acp.error.k5 <- min(svm.acp.error.k5)
 ind <- which.min(svm.tune.acp.error)
 svm.tune.test.acp <- tune(svm, train.y = factor(y.app),  train.x = X.acp.data[,1:ind], cost=svm.tune.acp$best.parameters$cost, gamma=svm.tune.acp$best.parameters$gamma)
 svm.tune.test.acp.pred <- predict(svm.tune.test.acp$best.model , X.acp.test[,1:ind])
-svm.tune.test.acp.perf <- table(factor(y.test),svm.tune.test.acp.pred)
+svm.tune.test.acp.perf <- table(factor(y.test),factor(svm.tune.test.acp.pred, levels=1:6))
 svm.tune.test.acp.error <- (1 - sum(diag(svm.tune.test.acp.perf))/X.test.dim[1])*100
 svm.tune.app.acp.error <- min(svm.tune.acp.error)
 
 ind <- which.min(svm.tune.acp.error.k5)
 svm.tune.test.acp.k5 <- tune(svm, train.y = factor(y.app),  train.x = X.acp.data[,1:ind], cost=svm.tune.acp.k5$best.parameters$cost, gamma=svm.tune.acp.k5$best.parameters$gamma)
 svm.tune.test.acp.pred.k5 <- predict(svm.tune.test.acp.k5$best.model , X.acp.test[,1:ind])
-svm.tune.test.acp.perf.k5 <- table(factor(y.test),svm.tune.test.acp.pred.k5)
+svm.tune.test.acp.perf.k5 <- table(factor(y.test),factor(svm.tune.test.acp.pred.k5, levels=1:6))
 svm.tune.test.acp.error.k5 <- (1 - sum(diag(svm.tune.test.acp.perf.k5))/X.test.dim[1])*100
 svm.tune.app.acp.error.k5 <- min(svm.tune.acp.error.k5)
 
@@ -178,14 +178,14 @@ svm.tune.app.acp.error.k5 <- min(svm.tune.acp.error.k5)
 ind <- which.min(nb.acp.error)
 nb.test.acp <- naiveBayes(factor(y.app)~., data=as.data.frame(X.acp.data[,1:ind]))
 nb.test.acp.pred <- predict(nb.test.acp,newdata=as.data.frame(X.acp.test[,1:ind]))
-nb.test.acp.perf <- table(factor(y.test),nb.test.acp.pred)
+nb.test.acp.perf <- table(factor(y.test),factor(nb.test.acp.pred, levels=1:6))
 nb.test.acp.error <- (1 - sum(diag(nb.test.acp.perf))/X.test.dim[1])*100
 nb.app.acp.error <- min(nb.acp.error)
 
 ind <- which.min(nb.acp.error.k5)
 nb.test.acp.k5 <- naiveBayes(factor(y.app)~., data=as.data.frame(X.acp.data[,1:ind]))
 nb.test.acp.pred.k5 <- predict(nb.test.acp.k5,newdata=as.data.frame(X.acp.test[,1:ind]))
-nb.test.acp.perf.k5 <- table(factor(y.test),nb.test.acp.pred.k5)
+nb.test.acp.perf.k5 <- table(factor(y.test),factor(nb.test.acp.pred.k5, levels=1:6))
 nb.test.acp.error.k5 <- (1 - sum(diag(nb.test.acp.perf.k5))/X.test.dim[1])*100
 nb.app.acp.error.k5 <- min(nb.acp.error.k5)
 
@@ -198,7 +198,7 @@ logReg.test.acp.pred <- predict(logReg.test.acp,newx=X.acp.test[,1:ind],type="re
 for (h in 1:X.test.dim[1]) {
   logReg.test.acp.res[h] <-which.max(logReg.test.acp.pred[h,1:6,dim(logReg.test.acp.pred)[3]-1])
 }
-logReg.test.acp.perf <- table(y.test,logReg.test.acp.res)
+logReg.test.acp.perf <- table(y.test.test.factor,factor(logReg.test.acp.res, levels=1:6))
 logReg.test.acp.error <-(1 - sum(diag(logReg.test.acp.perf))/X.test.dim[1])*100
 logReg.app.acp.error <- min(logReg.acp.error)
 
@@ -210,7 +210,7 @@ logReg.test.acp.pred.k5 <- predict(logReg.test.acp.k5,newx=X.acp.test[,1:ind],ty
 for (h in 1:X.test.dim[1]) {
   logReg.test.acp.res.k5[h] <-which.max(logReg.test.acp.pred.k5[h,1:6,dim(logReg.test.acp.pred.k5)[3]-1])
 }
-logReg.test.acp.perf.k5 <- table(y.test,logReg.test.acp.res.k5)
+logReg.test.acp.perf.k5 <- table(y.test,factor(logReg.test.acp.res.k5, levels=1:6))
 logReg.test.acp.error.k5 <-(1 - sum(diag(logReg.test.acp.perf.k5))/X.test.dim[1])*100
 logReg.app.acp.error.k5 <- min(logReg.acp.error.k5)
 
@@ -232,13 +232,13 @@ lda.app.acp.error.k5 <- min(lda.acp.error.k5)
 # KNN
 ind <-   which(knn.acp.error == min(knn.acp.error), arr.ind = TRUE) 
 knn.test.acp <- knn(as.data.frame(X.acp.data[,1:ind[2]]), as.data.frame(X.acp.test[,1:ind[2]]), y.app,k=ind)
-knn.test.acp.perf <- table(y.test, knn.test.acp)
+knn.test.acp.perf <- table(y.test, factor(knn.test.acp, levels=1:6))
 knn.test.acp.error <- (1 - sum(diag(knn.test.acp.perf))/X.test.dim[1])*100
 knn.app.acp.error <- min(knn.acp.error)
 
 ind <-  which(knn.acp.error.k5 == min(knn.acp.error.k5), arr.ind = TRUE) 
 knn.test.acp.k5 <- knn(as.data.frame(X.acp.data[,1:ind[2]]), as.data.frame(X.acp.test[,1:ind[2]]), y.app,k=ind)
-knn.test.acp.perf.k5 <- table(y.test, knn.test.acp.k5)
+knn.test.acp.perf.k5 <- table(y.test, factor(knn.test.acp.k5, levels=1:6))
 knn.test.acp.error.k5 <- (1 - sum(diag(knn.test.acp.perf.k5))/X.test.dim[1])*100
 knn.app.acp.error.k5 <- min(knn.acp.error.k5)
 
@@ -302,7 +302,7 @@ for(myVar in 1:dim(data.test)[1]){
   index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
   neuralnet.result[myVar] <- index
 }
-neuralnet.perf <- table(neuralnet.result,y.testfold)
+neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
 nn.test.acp.error <- (1-sum(diag(neuralnet.perf))/length(y.testfold))*100
 nn.app.acp.error <- min(nn.acp.error)
 
@@ -365,7 +365,7 @@ for(myVar in 1:dim(data.test)[1]){
   index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
   neuralnet.result.k5[myVar] <- index
 }
-neuralnet.perf.k5 <- table(neuralnet.result.k5,y.testfold)
+neuralnet.perf.k5 <- table(factor(neuralnet.result.k5, levels=1:6),y.testfold)
 nn.test.acp.error.k5 <- (1-sum(diag(neuralnet.perf.k5))/length(y.testfold))*100
 nn.app.acp.error.k5 <- min(nn.acp.error.k5)
 
@@ -389,14 +389,14 @@ rf.app.forward.error.k5 <- min(rf.forward.error.k5)
 ind <- which.min(tree.forward.error)
 tree.test.forward <- tree(factor(y.app)~., data=as.data.frame(X.forward.data[,1:ind]))
 tree.test.forward.pred <- predict(tree.test.forward,newdata=as.data.frame(X.forward.test[,1:ind]), type="class")
-tree.test.forward.perf <- table(y.test,tree.test.forward.pred)
+tree.test.forward.perf <- table(y.test,factor(tree.test.forward.pred, levels=1:6))
 tree.test.forward.error <- (1 - sum(diag(tree.test.forward.perf))/X.test.dim[1])*100
 tree.app.forward.error <- min(tree.forward.error)
 
 ind <- which.min(tree.forward.error.k5)
 tree.test.forward.k5 <- tree(factor(y.app)~., data=as.data.frame(X.forward.data[,1:ind]))
 tree.test.forward.pred.k5 <- predict(tree.test.forward.k5,newdata=as.data.frame(X.forward.test[,1:ind]), type="class")
-tree.test.forward.perf.k5 <- table(y.test,tree.test.forward.pred.k5)
+tree.test.forward.perf.k5 <- table(y.test,factor(tree.test.forward.pred.k5, levels=1:6))
 tree.test.forward.error.k5 <- (1 - sum(diag(tree.test.forward.perf.k5))/X.test.dim[1])*100
 tree.app.forward.error.k5 <- min(tree.forward.error.k5)
 
@@ -404,14 +404,14 @@ tree.app.forward.error.k5 <- min(tree.forward.error.k5)
 ind <- which.min(svm.forward.error)
 svm.test.forward <- svm(X.forward.data[,1:ind],y.app,type="C-classification")
 svm.test.forward.pred <- predict(svm.test.forward, X.forward.test[,1:ind])
-svm.test.forward.perf <- table(factor(y.test),svm.test.forward.pred)
+svm.test.forward.perf <- table(factor(y.test),factor(svm.test.forward.pred, levels=1:6))
 svm.test.forward.error <- (1 - sum(diag(svm.test.forward.perf))/X.test.dim[1])*100
 svm.app.forward.error <- min(svm.forward.error)
 
 ind <- which.min(svm.forward.error.k5)
 svm.test.forward.k5 <- svm(X.forward.data[,1:ind],y.app,type="C-classification")
 svm.test.forward.pred.k5 <- predict(svm.test.forward.k5, X.forward.test[,1:ind])
-svm.test.forward.perf.k5 <- table(factor(y.test),svm.test.forward.pred.k5)
+svm.test.forward.perf.k5 <- table(factor(y.test),factor(svm.test.forward.pred.k5, levels=1:6))
 svm.test.forward.error.k5 <- (1 - sum(diag(svm.test.forward.perf.k5))/X.test.dim[1])*100
 svm.app.forward.error.k5 <- min(svm.forward.error.k5)
 
@@ -419,14 +419,14 @@ svm.app.forward.error.k5 <- min(svm.forward.error.k5)
 ind <- which.min(svm.tune.forward.error)
 svm.tune.test.forward <- tune(svm, train.y = factor(y.app),  train.x = X.forward.data[,1:ind], cost=svm.tune.forward$best.parameters$cost, gamma=svm.tune.forward$best.parameters$gamma)
 svm.tune.test.forward.pred <- predict(svm.tune.test.forward$best.model , X.forward.test[,1:ind])
-svm.tune.test.forward.perf <- table(factor(y.test),svm.tune.test.forward.pred)
+svm.tune.test.forward.perf <- table(factor(y.test),factor(svm.tune.test.forward.pred, levels=1:6))
 svm.tune.test.forward.error <- (1 - sum(diag(svm.tune.test.forward.perf))/X.test.dim[1])*100
 svm.tune.app.forward.error <- min(svm.tune.forward.error)
 
 ind <- which.min(svm.tune.forward.error.k5)
 svm.tune.test.forward.k5 <- tune(svm, train.y = factor(y.app),  train.x = X.forward.data[,1:ind], cost=svm.tune.forward.k5$best.parameters$cost, gamma=svm.tune.forward.k5$best.parameters$gamma)
 svm.tune.test.forward.pred.k5 <- predict(svm.tune.test.forward.k5$best.model , X.forward.test[,1:ind])
-svm.tune.test.forward.perf.k5 <- table(factor(y.test),svm.tune.test.forward.pred.k5)
+svm.tune.test.forward.perf.k5 <- table(factor(y.test),factor(svm.tune.test.forward.pred.k5, levels=1:6))
 svm.tune.test.forward.error.k5 <- (1 - sum(diag(svm.tune.test.forward.perf.k5))/X.test.dim[1])*100
 svm.tune.app.forward.error.k5 <- min(svm.tune.forward.error.k5)
 
@@ -434,14 +434,14 @@ svm.tune.app.forward.error.k5 <- min(svm.tune.forward.error.k5)
 ind <- which.min(nb.forward.error)
 nb.test.forward <- naiveBayes(factor(y.app)~., data=as.data.frame(X.forward.data[,1:ind]))
 nb.test.forward.pred <- predict(nb.test.forward,newdata=as.data.frame(X.forward.test[,1:ind]))
-nb.test.forward.perf <- table(factor(y.test),nb.test.forward.pred)
+nb.test.forward.perf <- table(factor(y.test),factor(nb.test.forward.pred, levels=1:6))
 nb.test.forward.error <- (1 - sum(diag(nb.test.forward.perf))/X.test.dim[1])*100
 nb.app.forward.error <- min(nb.forward.error)
 
 ind <- which.min(nb.forward.error.k5)
 nb.test.forward.k5 <- naiveBayes(factor(y.app)~., data=as.data.frame(X.forward.data[,1:ind]))
 nb.test.forward.pred.k5 <- predict(nb.test.forward.k5,newdata=as.data.frame(X.forward.test[,1:ind]))
-nb.test.forward.perf.k5 <- table(factor(y.test),nb.test.forward.pred.k5)
+nb.test.forward.perf.k5 <- table(factor(y.test),factor(nb.test.forward.pred.k5, levels=1:6))
 nb.test.forward.error.k5 <- (1 - sum(diag(nb.test.forward.perf.k5))/X.test.dim[1])*100
 nb.app.forward.error.k5 <- min(nb.forward.error.k5)
 
@@ -454,7 +454,7 @@ logReg.test.forward.pred <- predict(logReg.test.forward,newx=as.matrix(X.forward
 for (h in 1:X.test.dim[1]) {
   logReg.test.forward.res[h] <-which.max(logReg.test.forward.pred[h,1:6,dim(logReg.test.forward.pred)[3]-1])
 }
-logReg.test.forward.perf <- table(y.test,logReg.test.forward.res)
+logReg.test.forward.perf <- table(y.test,factor(logReg.test.forward.res, levels=1:6))
 logReg.test.forward.error <-(1 - sum(diag(logReg.test.forward.perf))/X.test.dim[1])*100
 logReg.app.forward.error <- min(logReg.forward.error)
 
@@ -466,7 +466,7 @@ logReg.test.forward.pred.k5 <- predict(logReg.test.forward.k5,newx=as.matrix(X.f
 for (h in 1:X.test.dim[1]) {
   logReg.test.forward.res.k5[h] <-which.max(logReg.test.forward.pred.k5[h,1:6,dim(logReg.test.forward.pred.k5)[3]-1])
 }
-logReg.test.forward.perf.k5 <- table(y.test,logReg.test.forward.res.k5)
+logReg.test.forward.perf.k5 <- table(y.test,factor(logReg.test.forward.res.k5, levels=1:6))
 logReg.test.forward.error.k5 <-(1 - sum(diag(logReg.test.forward.perf.k5))/X.test.dim[1])*100
 logReg.app.forward.error.k5 <- min(logReg.forward.error.k5)
 
@@ -488,13 +488,13 @@ lda.app.forward.error.k5 <- min(lda.forward.error.k5)
 # KNN
 ind <-  which(knn.forward.error == min(knn.forward.error), arr.ind = TRUE) 
 knn.test.forward <- knn(as.data.frame(X.forward.data[,1:ind[2]]), as.data.frame(X.forward.test[,1:ind[2]]), y.app,k=ind)
-knn.test.forward.perf <- table(y.test, knn.test.forward)
+knn.test.forward.perf <- table(y.test,factor( knn.test.forward, levels=1:6))
 knn.test.forward.error <- (1 - sum(diag(knn.test.forward.perf))/X.test.dim[1])*100
 knn.app.forward.error <- min(knn.forward.error)
 
 ind <-  which(knn.forward.error.k5 == min(knn.forward.error.k5), arr.ind = TRUE) 
 knn.test.forward.k5 <- knn(as.data.frame(X.forward.data[,1:ind[2]]), as.data.frame(X.forward.test[,1:ind[2]]), y.app,k=ind)
-knn.test.forward.perf.k5 <- table(y.test, knn.test.forward.k5)
+knn.test.forward.perf.k5 <- table(y.test, factor( knn.test.forward.k5, levels=1:6))
 knn.test.forward.error.k5 <- (1 - sum(diag(knn.test.forward.perf.k5))/X.test.dim[1])*100
 knn.app.forward.error.k5 <- min(knn.forward.error.k5)
 
@@ -558,7 +558,7 @@ for(myVar in 1:dim(data.test)[1]){
   index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
   neuralnet.result[myVar] <- index
 }
-neuralnet.perf <- table(neuralnet.result,y.testfold)
+neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
 nn.test.forward.error <- (1-sum(diag(neuralnet.perf))/length(y.testfold))*100
 nn.app.forward.error <- min(nn.forward.error)
 
@@ -621,7 +621,7 @@ for(myVar in 1:dim(data.test)[1]){
   index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
   neuralnet.result.k5[myVar] <- index
 }
-neuralnet.perf.k5 <- table(neuralnet.result.k5,y.testfold)
+neuralnet.perf.k5 <- table(factor(neuralnet.result, levels=1:6),y.testfold)
 nn.test.forward.error.k5 <- (1-sum(diag(neuralnet.perf.k5))/length(y.testfold))*100
 nn.app.forward.error.k5 <- min(nn.forward.error.k5)
 
@@ -646,52 +646,52 @@ rf.app.lda.error.k5 <- min(rf.lda.error.k5)
 # Tree
 tree.test.lda <- tree(factor(y.app)~., data=as.data.frame(X.lda.data))
 tree.test.lda.pred <- predict(tree.test.lda,newdata=as.data.frame(X.lda.test), type="class")
-tree.test.lda.perf <- table(y.test,tree.test.lda.pred)
+tree.test.lda.perf <- table(y.test,factor(tree.test.lda.pred, levels=1:6))
 tree.test.lda.error <- (1 - sum(diag(tree.test.lda.perf))/X.test.dim[1])*100
 tree.app.lda.error <- min(tree.lda.error)
 
 tree.test.lda.k5 <- tree(factor(y.app)~., data=as.data.frame(X.lda.data))
 tree.test.lda.pred.k5 <- predict(tree.test.lda.k5,newdata=as.data.frame(X.lda.test), type="class")
-tree.test.lda.perf.k5 <- table(y.test,tree.test.lda.pred.k5)
+tree.test.lda.perf.k5 <- table(y.test,factor(tree.test.lda.pred.k5, levels=1:6))
 tree.test.lda.error.k5 <- (1 - sum(diag(tree.test.lda.perf.k5))/X.test.dim[1])*100
 tree.app.lda.error.k5 <- min(tree.lda.error.k5)
 
 # SVM
 svm.test.lda <- svm(X.lda.data,y.app,type="C-classification")
 svm.test.lda.pred <- predict(svm.test.lda, X.lda.test)
-svm.test.lda.perf <- table(factor(y.test),svm.test.lda.pred)
+svm.test.lda.perf <- table(factor(y.test),factor(svm.test.lda.pred, levels=1:6))
 svm.test.lda.error <- (1 - sum(diag(svm.test.lda.perf))/X.test.dim[1])*100
 svm.app.lda.error <- min(svm.lda.error)
 
 svm.test.lda.k5 <- svm(X.lda.data,y.app,type="C-classification")
 svm.test.lda.pred.k5 <- predict(svm.test.lda.k5, X.lda.test)
-svm.test.lda.perf.k5 <- table(factor(y.test),svm.test.lda.pred.k5)
+svm.test.lda.perf.k5 <- table(factor(y.test),factor(svm.test.lda.pred.k5, levels=1:6))
 svm.test.lda.error.k5 <- (1 - sum(diag(svm.test.lda.perf.k5))/X.test.dim[1])*100
 svm.app.lda.error.k5 <- min(svm.lda.error.k5)
 
 # SVM Tune
 svm.tune.test.lda <- tune(svm, train.y = factor(y.app),  train.x = X.lda.data, cost=svm.tune.lda$best.parameters$cost, gamma=svm.tune.lda$best.parameters$gamma)
 svm.tune.test.lda.pred <- predict(svm.tune.test.lda$best.model , X.lda.test)
-svm.tune.test.lda.perf <- table(factor(y.test),svm.tune.test.lda.pred)
+svm.tune.test.lda.perf <- table(factor(y.test),factor(svm.tune.test.lda.pred, levels=1:6))
 svm.tune.test.lda.error <- (1 - sum(diag(svm.tune.test.lda.perf))/X.test.dim[1])*100
 svm.tune.app.lda.error <- min(svm.tune.lda.error)
 
 svm.tune.test.lda.k5 <- tune(svm, train.y = factor(y.app),  train.x = X.lda.data, cost=svm.tune.lda.k5$best.parameters$cost, gamma=svm.tune.lda.k5$best.parameters$gamma)
 svm.tune.test.lda.pred.k5 <- predict(svm.tune.test.lda.k5$best.model , X.lda.test)
-svm.tune.test.lda.perf.k5 <- table(factor(y.test),svm.tune.test.lda.pred.k5)
+svm.tune.test.lda.perf.k5 <- table(factor(y.test),factor(svm.tune.test.lda.pred.k5, levels=1:6))
 svm.tune.test.lda.error.k5 <- (1 - sum(diag(svm.tune.test.lda.perf.k5))/X.test.dim[1])*100
 svm.tune.app.lda.error.k5 <- min(svm.tune.lda.error.k5)
 
 # Naive Bayesien
 nb.test.lda <- naiveBayes(factor(y.app)~., data=as.data.frame(X.lda.data))
 nb.test.lda.pred <- predict(nb.test.lda,newdata=as.data.frame(X.lda.test))
-nb.test.lda.perf <- table(factor(y.test),nb.test.lda.pred)
+nb.test.lda.perf <- table(factor(y.test),factor(nb.test.lda.pred, levels=1:6))
 nb.test.lda.error <- (1 - sum(diag(nb.test.lda.perf))/X.test.dim[1])*100
 nb.app.lda.error <- min(nb.lda.error)
 
 nb.test.lda.k5 <- naiveBayes(factor(y.app)~., data=as.data.frame(X.lda.data))
 nb.test.lda.pred.k5 <- predict(nb.test.lda.k5,newdata=as.data.frame(X.lda.test))
-nb.test.lda.perf.k5 <- table(factor(y.test),nb.test.lda.pred.k5)
+nb.test.lda.perf.k5 <- table(factor(y.test),factor(nb.test.lda.pred.k5, levels=1:6))
 nb.test.lda.error.k5 <- (1 - sum(diag(nb.test.lda.perf.k5))/X.test.dim[1])*100
 nb.app.lda.error.k5 <- min(nb.lda.error.k5)
 
@@ -703,7 +703,7 @@ logReg.test.lda.pred <- predict(logReg.test.lda,newx=X.lda.test,type="response",
 for (h in 1:X.test.dim[1]) {
   logReg.test.lda.res[h] <-which.max(logReg.test.lda.pred[h,1:6,dim(logReg.test.lda.pred)[3]-1])
 }
-logReg.test.lda.perf <- table(y.test,logReg.test.lda.res)
+logReg.test.lda.perf <- table(y.test,factor(logReg.test.lda.res, levels=1:6))
 logReg.test.lda.error <-(1 - sum(diag(logReg.test.lda.perf))/X.test.dim[1])*100
 logReg.app.lda.error <- min(logReg.lda.error)
 
@@ -714,7 +714,7 @@ logReg.test.lda.pred.k5 <- predict(logReg.test.lda.k5,newx=X.lda.test,type="resp
 for (h in 1:X.test.dim[1]) {
   logReg.test.lda.res.k5[h] <-which.max(logReg.test.lda.pred.k5[h,1:6,dim(logReg.test.lda.pred.k5)[3]-1])
 }
-logReg.test.lda.perf.k5 <- table(y.test,logReg.test.lda.res.k5)
+logReg.test.lda.perf.k5 <- table(y.test,factor(logReg.test.lda.res.k5, levels=1:6))
 logReg.test.lda.error.k5 <-(1 - sum(diag(logReg.test.lda.perf.k5))/X.test.dim[1])*100
 logReg.app.lda.error.k5 <- min(logReg.lda.error.k5)
 
@@ -734,13 +734,13 @@ lda.app.lda.error.k5 <- min(lda.lda.error.k5)
 # KNN
 ind <-  which.min(knn.lda.error)
 knn.test.lda <- knn(as.data.frame(X.lda.data), as.data.frame(X.lda.test), y.app,k=ind)
-knn.test.lda.perf <- table(y.test, knn.test.lda)
+knn.test.lda.perf <- table(y.test, factor(knn.test.lda, levels=1:6))
 knn.test.lda.error <- (1 - sum(diag(knn.test.lda.perf))/X.test.dim[1])*100
 knn.app.lda.error <- min(knn.lda.error)
 
 ind <-  which.min(knn.lda.error.k5)
 knn.test.lda.k5 <- knn(as.data.frame(X.lda.data), as.data.frame(X.lda.test), y.app,k=ind)
-knn.test.lda.perf.k5 <- table(y.test, knn.test.lda.k5)
+knn.test.lda.perf.k5 <- table(y.test, factor(knn.test.lda.k5, levels=1:6))
 knn.test.lda.error.k5 <- (1 - sum(diag(knn.test.lda.perf.k5))/X.test.dim[1])*100
 knn.app.lda.error.k5 <- min(knn.lda.error.k5)
 
@@ -803,7 +803,7 @@ for(myVar in 1:dim(data.test)[1]){
   index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
   neuralnet.result[myVar] <- index
 }
-neuralnet.perf <- table(neuralnet.result,y.testfold)
+neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
 nn.test.lda.error <- (1-sum(diag(neuralnet.perf))/length(y.testfold))*100
 nn.app.lda.error <- min(nn.lda.error)
 
@@ -866,7 +866,7 @@ for(myVar in 1:dim(data.test)[1]){
   index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
   neuralnet.result.k5[myVar] <- index
 }
-neuralnet.perf.k5 <- table(neuralnet.result.k5,y.testfold)
+neuralnet.perf.k5 <- table(factor(neuralnet.result.k5, levels=1:6),y.testfold)
 nn.test.lda.error.k5 <- (1-sum(diag(neuralnet.perf.k5))/length(y.testfold))*100
 nn.app.lda.error.k5 <- min(nn.lda.error.k5)
 
