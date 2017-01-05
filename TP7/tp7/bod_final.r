@@ -163,7 +163,7 @@ for(i in 1:K){
     for(number in 1:numberKnn){
       # ACP Full
       knn.acp <- knn(as.data.frame(X.acp.data[folds!=i,1:j]), as.data.frame(X.acp.data[folds==i,1:j]), y.app[folds!=i],k=number)
-      knn.acp.perf <- table(y.app[folds==i], knn.acp)
+      knn.acp.perf <- table(y.app[folds==i],factor(knn.acp, levels=1:6))
       knn.acp.error[number,j-1] <-knn.acp.error[number,j-1]  + 1 - sum(diag(knn.acp.perf))/numberTest
     }
     
@@ -176,7 +176,7 @@ for(i in 1:K){
       logReg.acp.res[h] <-which.max(logReg.acp.pred[h,1:6,dim(logReg.acp.pred)[3]-1])
     }
     
-    logReg.acp.perf <- table(y.app[folds==i],logReg.acp.res)
+    logReg.acp.perf <- table(y.app[folds==i],factor(logReg.acp.res, levels=1:6))
     logReg.acp.error[j-1] <-logReg.acp.error[j-1] + 1 - sum(diag(logReg.acp.perf))/numberTest
     
     
@@ -189,25 +189,25 @@ for(i in 1:K){
     # Naive Baeysien
     nb.acp <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
     nb.acp.pred <- predict(nb.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
-    nb.acp.perf <- table(factor(y.app[folds==i]),nb.acp.pred)
+    nb.acp.perf <- table(factor(y.app[folds==i]),factor(lnb.acp.pred, levels=1:6))
     nb.acp.error[j-1] <-nb.acp.error[j-1] + 1 - sum(diag(nb.acp.perf))/numberTest
     
     # SVM
     svm.acp <- svm(X.acp.data[folds!=i,1:j],y.app[folds!=i],type="C-classification")
     svm.acp.pred <- predict(svm.acp, X.acp.data[folds==i,1:j])
-    svm.acp.perf <- table(factor(y.app[folds==i]),svm.acp.pred)
+    svm.acp.perf <- table(factor(y.app[folds==i]),factor(svm.acp.pred, levels=1:6))
     svm.acp.error[j-1] <-svm.acp.error[j-1] + 1 - sum(diag(svm.acp.perf))/numberTest
     
     # SVM Tune 
     svm.tune.acp <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.acp.data[folds!=i,1:j], ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
     svm.tune.acp.pred <- predict(svm.tune.acp$best.model, X.acp.data[folds==i,1:j])
-    svm.tune.acp.perf <- table(factor(y.app[folds==i]),svm.tune.acp.pred)
+    svm.tune.acp.perf <- table(factor(y.app[folds==i]),factor(svm.tune.acp.pred, levels=1:6))
     svm.tune.acp.error[j-1] <-svm.tune.acp.error[j-1] + 1 - sum(diag(svm.tune.acp.perf))/numberTest
     
     # Tree
     tree.acp <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
     tree.acp.pred <- predict(tree.acp,as.data.frame(X.acp.data[folds==i,1:j]), type="class")
-    tree.acp.perf <- table(y.app[folds==i],tree.acp.pred)
+    tree.acp.perf <- table(y.app[folds==i],factor(tree.acp.pred, levels=1:6))
     tree.acp.error[j-1] <-tree.acp.error[j-1] + 1 - sum(diag(tree.acp.perf))/numberTest
 
     # Neural Network
@@ -272,7 +272,7 @@ for(i in 1:K){
       index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
       neuralnet.result[myVar] <- index
     }
-    neuralnet.perf <- table(neuralnet.result,y.testfold)
+    neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
     nn.acp.error[j-1] <-nn.acp.error[j-1] + 1 - sum(diag(neuralnet.perf))/length(y.testfold)
   }
   
@@ -294,7 +294,7 @@ for(i in 1:K){
     for(number in 1:numberKnn){
     # ACP Full
       knn.forward <- knn(as.data.frame(X.forward.data[folds!=i,1:j]), as.data.frame(X.forward.data[folds==i,1:j]), y.app[folds!=i],k=number)
-      knn.forward.perf <- table(y.app[folds==i], knn.forward)
+      knn.forward.perf <- table(y.app[folds==i], factor(knn.forward, levels=1:6))
       knn.forward.error[number,j-1] <-knn.forward.error[number,j-1]  + 1 - sum(diag(knn.forward.perf))/numberTest
     }
     
@@ -305,7 +305,7 @@ for(i in 1:K){
     for (h in 1:numberTest) {
       logReg.forward.res[h] <-which.max(logReg.forward.pred[h,1:6,dim(logReg.forward.pred)[3] -1])
     }
-    logReg.forward.perf <- table(y.app[folds==i],logReg.forward.res)
+    logReg.forward.perf <- table(y.app[folds==i],factor(logReg.forward.res, levels=1:6))
     logReg.forward.error[j-1] <-logReg.forward.error[j-1] + 1 - sum(diag(logReg.forward.perf))/numberTest
     
     # Random Forest
@@ -317,25 +317,25 @@ for(i in 1:K){
     # Naive Baeysien
     nb.forward <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.forward.data[folds!=i,1:j]))
     nb.forward.pred <- predict(nb.forward,newdata=as.data.frame(X.forward.data[folds==i,1:j]))
-    nb.forward.perf <- table(factor(y.app[folds==i]),nb.forward.pred)
+    nb.forward.perf <- table(factor(y.app[folds==i]),factor(nb.forward.pred, levels=1:6))
     nb.forward.error[j-1] <-nb.forward.error[j-1] + 1 - sum(diag(nb.forward.perf))/numberTest
     
     # SVM
     svm.forward <- svm(X.forward.data[folds!=i,1:j],y.app[folds!=i],type="C-classification")
     svm.forward.pred <- predict(svm.forward, X.forward.data[folds==i,1:j])
-    svm.forward.perf <- table(factor(y.app[folds==i]),svm.forward.pred)
+    svm.forward.perf <- table(factor(y.app[folds==i]),factor(svm.forward.pred, levels=1:6))
     svm.forward.error[j-1] <-svm.forward.error[j-1] + 1 - sum(diag(svm.forward.perf))/numberTest
     
     # SVM Tune 
     svm.tune.forward <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.forward.data[folds!=i,1:j], ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
     svm.tune.forward.pred <- predict(svm.tune.forward$best.model, X.forward.data[folds==i,1:j])
-    svm.tune.forward.perf <- table(factor(y.app[folds==i]),svm.tune.forward.pred)
+    svm.tune.forward.perf <- table(factor(y.app[folds==i]),factor(svm.tune.forward.pred, levels=1:6))
     svm.tune.forward.error[j-1] <-svm.tune.forward.error[j-1] + 1 - sum(diag(svm.tune.forward.perf))/numberTest
     
     # Tree
     tree.forward <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.forward.data[folds!=i,1:j]))
     tree.forward.pred <- predict(tree.forward,as.data.frame(X.forward.data[folds==i,1:j]), type="class")
-    tree.forward.perf <- table(y.app[folds==i],tree.forward.pred)
+    tree.forward.perf <- table(y.app[folds==i],factor(tree.forward.pred, levels=1:6))
     tree.forward.error[j-1] <-tree.forward.error[j-1] + 1 - sum(diag(tree.forward.perf))/numberTest
 
     # Neural Network
@@ -400,7 +400,7 @@ for(i in 1:K){
         index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
         neuralnet.result[myVar] <- index
       }
-      neuralnet.perf <- table(neuralnet.result,y.testfold)
+      neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
       nn.forward.error[j-1] <- nn.forward.error[j-1] + 1-sum(diag(neuralnet.perf))/length(y.testfold)
   }
   
@@ -418,25 +418,25 @@ for(i in 1:K){
   # Tree
   tree.lda <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data))
   tree.lda.pred <- predict(tree.lda,newdata=as.data.frame(X.lda.testfold), type="class")
-  tree.lda.perf <- table(y.app[folds==i],tree.lda.pred)
+  tree.lda.perf <- table(y.app[folds==i],factor(tree.lda.pred, levels=1:6))
   tree.lda.error <-tree.lda.error + 1 - sum(diag(tree.lda.perf))/numberTest
   
   # SVM
   svm.lda <- svm(X.lda.data,y.app[folds!=i],type="C-classification")
   svm.lda.pred <- predict(svm.lda, X.lda.testfold)
-  svm.lda.perf <- table(factor(y.app[folds==i]),svm.lda.pred)
+  svm.lda.perf <- table(factor(y.app[folds==i]),factor(svm.lda.pred, levels=1:6))
   svm.lda.error <-svm.lda.error + 1 - sum(diag(svm.lda.perf))/numberTest
   
   # SVM Tune
   svm.tune.lda <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.lda.data, ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
   svm.tune.lda.pred <- predict(svm.tune.lda$best.model , X.lda.testfold)
-  svm.tune.lda.perf <- table(factor(y.app[folds==i]),svm.tune.lda.pred)
+  svm.tune.lda.perf <- table(factor(y.app[folds==i]),factor(svm.tune.lda.pred, levels=1:6))
   svm.tune.lda.error <-svm.tune.lda.error + 1 - sum(diag(svm.tune.lda.perf))/numberTest
   
   # Naive Bayesien
   nb.lda <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.lda.data))
   nb.lda.pred <- predict(nb.lda,newdata=as.data.frame(X.lda.testfold))
-  nb.lda.perf <- table(factor(y.app[folds==i]),nb.lda.pred)
+  nb.lda.perf <- table(factor(y.app[folds==i]),factor(nb.lda.pred, levels=1:6))
   nb.lda.error <-nb.lda.error + 1 - sum(diag(nb.lda.perf))/numberTest
   
   # RegLog
@@ -447,7 +447,7 @@ for(i in 1:K){
   for (h in 1:numberTest) {
     logReg.lda.res[h] <-which.max(logReg.lda.pred[h,1:6,dim(logReg.lda.pred)[3] -1])
   }
-  logReg.lda.perf <- table(y.app[folds==i],logReg.lda.res)
+  logReg.lda.perf <- table(y.app[folds==i],factor(logReg.lda.res, levels=1:6))
   logReg.lda.error <-logReg.lda.error + 1 - sum(diag(logReg.lda.perf))/numberTest
   
   # LDA
@@ -459,7 +459,7 @@ for(i in 1:K){
   # KNN
   for(number in 1:numberKnn){
     knn.lda <- knn(as.data.frame(X.lda.data), as.data.frame(X.lda.testfold), y.app[folds!=i],k=number)
-    knn.lda.perf <- table(y.app[folds==i], knn.lda)
+    knn.lda.perf <- table(y.app[folds==i],factor(knn.lda, levels=1:6))
     knn.lda.error[number] <-knn.lda.error[number]  + 1 - sum(diag(knn.lda.perf))/numberTest 
   }
   
@@ -522,7 +522,7 @@ for(i in 1:K){
     index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
     neuralnet.result[myVar] <- index
   }
-  neuralnet.perf <- table(neuralnet.result,y.testfold)
+  neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
   nn.lda.error <- nn.lda.error + 1-sum(diag(neuralnet.perf))/length(y.testfold)
   
   # ===
