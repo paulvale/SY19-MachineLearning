@@ -80,42 +80,52 @@ folds <- sample(1:K,X.app.dim[1] ,replace=TRUE)
 tree.acp.error <- rep(0,159)
 tree.lda.error <- 0
 tree.forward.error <- rep(0, 159)
+tree.f.error <- rep(0, 159)
 
 svm.acp.error <- rep(0,159)
 svm.lda.error <- 0
 svm.forward.error <- rep(0, 159)
+svm.f.error <- rep(0, 159)
 
 svm.tune.acp.error <- rep(0,159)
 svm.tune.lda.error <- 0
 svm.tune.forward.error <- rep(0, 159)
+svm.tune.f.error <- rep(0, 159)
 
 nb.acp.error <- rep(0,159)
 nb.lda.error <- 0
 nb.forward.error <- rep(0,159)
+nb.f.error <- rep(0,159)
 
 logReg.acp.error <- rep(0,159)
 logReg.lda.error <- 0
 logReg.forward.error <- rep(0, 159)
+logReg.f.error <- rep(0, 159)
 
 lda.acp.error <- rep(0,159)
 lda.lda.error <- 0
 lda.forward.error <- rep(0, 159)
+lda.f.error <- rep(0, 159)
 
 qda.acp.error <- rep(0,5)
 qda.lda.error <- 0
 qda.forward.error <- rep(0,5)
+qda.f.error <- rep(0,5)
 
 knn.acp.error <- matrix(0,nrow=numberKnn, ncol=159)
 knn.lda.error <- rep(0,numberKnn)
 knn.forward.error <- matrix(0,nrow=numberKnn, ncol=159)
+knn.f.error <- matrix(0,nrow=numberKnn, ncol=159)
 
 rf.acp.error <- matrix(0,nrow=length(vectorTree), ncol=159)
 rf.lda.error <- rep(0,length(vectorTree))
 rf.forward.error <- matrix(0,nrow=length(vectorTree), ncol=159)
+rf.f.error <- matrix(0,nrow=length(vectorTree), ncol=159)
 
 nn.acp.error <- rep(0,159)
 nn.lda.error <- 0
 nn.forward.error <- rep(0, 159)
+nn.f.error <- rep(0, 159)
 
 depart <- Sys.time()
 # ====
@@ -416,6 +426,132 @@ for(i in 1:K){
       neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
       nn.forward.error[j-1] <- nn.forward.error[j-1] + 1-sum(diag(neuralnet.perf))/length(y.testfold)
   }
+
+  # ===
+  # F
+  # ===
+  print("F")
+  for(j in 2:160){
+    print(j)
+    # LDA
+    lda.f <- lda(y.app[folds!=i]~., data=as.data.frame(X.f.data[folds!=i,1:j]))
+    lda.f.pred <- predict(lda.f,newdata=as.data.frame(X.f.data[folds==i,1:j]))
+    lda.f.perf <- table(y.app[folds==i],lda.f.pred$class)
+    lda.f.error[j-1] <-lda.f.error[j-1] + 1 - sum(diag(lda.f.perf))/numberTest
+    
+    # KNN
+    for(number in 1:numberKnn){
+    # ACP Full
+      knn.f <- knn(as.data.frame(X.f.data[folds!=i,1:j]), as.data.frame(X.f.data[folds==i,1:j]), y.app[folds!=i],k=number)
+      knn.f.perf <- table(y.app[folds==i], factor(knn.f, levels=1:6))
+      knn.f.error[number,j-1] <-knn.f.error[number,j-1]  + 1 - sum(diag(knn.f.perf))/numberTest
+    }
+    
+    # LogReg
+    logReg.f.res<-c(rep(0,numberTest))
+    logReg.f <- glmnet(as.matrix(X.f.data[folds!=i,1:j]) ,y=y.app[folds!=i],family="multinomial")
+    logReg.f.pred <- predict(logReg.f,newx=as.matrix(X.f.data[folds==i,1:j]),type="response",s=logReg.f$lambda.min)
+    for (h in 1:numberTest) {
+      logReg.f.res[h] <-which.max(logReg.f.pred[h,1:6,dim(logReg.f.pred)[3] -1])
+    }
+    logReg.f.perf <- table(y.app[folds==i],factor(logReg.f.res, levels=1:6))
+    logReg.f.error[j-1] <-logReg.f.error[j-1] + 1 - sum(diag(logReg.f.perf))/numberTest
+    
+    # Random Forest
+    for(tree in vectorTree) {
+      rf.f <- randomForest(y.app.factor~., data=as.data.frame(X.f.data[folds!=i,1:j]), xtest=as.data.frame(X.f.data[folds==i,1:j]), ytest=y.test.factor, ntree=tree)
+      rf.f.error[tree/100, j-1] <- rf.f.error[tree/100, j-1] + 1 - (sum(diag(rf.f$test$confusion)/numberTest))
+    }
+    
+    # Naive Baeysien
+    nb.f <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.f.data[folds!=i,1:j]))
+    nb.f.pred <- predict(nb.f,newdata=as.data.frame(X.f.data[folds==i,1:j]))
+    nb.f.perf <- table(factor(y.app[folds==i]),factor(nb.f.pred, levels=1:6))
+    nb.f.error[j-1] <-nb.f.error[j-1] + 1 - sum(diag(nb.f.perf))/numberTest
+    
+    # SVM
+    svm.f <- svm(X.f.data[folds!=i,1:j],y.app[folds!=i],type="C-classification")
+    svm.f.pred <- predict(svm.f, X.f.data[folds==i,1:j])
+    svm.f.perf <- table(factor(y.app[folds==i]),factor(svm.f.pred, levels=1:6))
+    svm.f.error[j-1] <-svm.f.error[j-1] + 1 - sum(diag(svm.f.perf))/numberTest
+    
+    # SVM Tune 
+    svm.tune.f <- tune(svm, train.y = factor(y.app[folds!=i]),  train.x = X.f.data[folds!=i,1:j], ranges = list(cost=10^(-1:2), gamma=c(.0005, .005, .05, .5, 1,2)))
+    svm.tune.f.pred <- predict(svm.tune.f$best.model, X.f.data[folds==i,1:j])
+    svm.tune.f.perf <- table(factor(y.app[folds==i]),factor(svm.tune.f.pred, levels=1:6))
+    svm.tune.f.error[j-1] <-svm.tune.f.error[j-1] + 1 - sum(diag(svm.tune.f.perf))/numberTest
+    
+    # Tree
+    tree.f <- tree(factor(y.app[folds!=i])~., data=as.data.frame(X.f.data[folds!=i,1:j]))
+    tree.f.pred <- predict(tree.f,as.data.frame(X.f.data[folds==i,1:j]), type="class")
+    tree.f.perf <- table(y.app[folds==i],factor(tree.f.pred, levels=1:6))
+    tree.f.error[j-1] <-tree.f.error[j-1] + 1 - sum(diag(tree.f.perf))/numberTest
+
+    # Neural Network
+    data.train = X.f.data[folds!=i,1:j]
+    data.test = X.f.data[folds==i,1:j]
+    y.train = y.app[folds!=i]
+    y.testfold = y.app[folds==i]
+    ordre = c(1:dim(data.train)[2])
+    for(kk in 1:6){
+        response <- rep(0,length(y.train))
+        for(myVar in 1:length(y.train)){
+         if(y.train[myVar]==kk){
+            response[myVar]=1
+          }
+        }
+        
+        newDataSet <- data.frame(data.train,response)
+        formule = getFormulas(colnames(newDataSet), ordre,"response")
+        if(kk==1) {
+          neuralnet1 <- NULL
+          while(is.null(neuralnet1$result.matrix)){
+            neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          }
+        } else if( kk==2) {
+          neuralnet2 <- NULL
+          while(is.null(neuralnet2$result.matrix)){
+            neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          }
+        } else if(kk==3){
+          neuralnet3 <- NULL
+          while(is.null(neuralnet3$result.matrix)){
+            neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          }
+        } else if(kk==4){
+          neuralnet4 <- NULL
+          while(is.null(neuralnet4$result.matrix)){
+            neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          }
+        } else if(kk==5){
+          neuralnet5 <- NULL
+          while(is.null(neuralnet5$result.matrix)){
+            neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          }
+        } else if(kk==6){
+          neuralnet6 <- NULL
+          while(is.null(neuralnet6$result.matrix)){
+            neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          }
+        }
+      }
+      # predictions 
+      c1<-compute(neuralnet1,as.matrix(data.test))
+      c2<-compute(neuralnet2,as.matrix(data.test))
+      c3<-compute(neuralnet3,as.matrix(data.test))
+      c4<-compute(neuralnet4,as.matrix(data.test))
+      c5<-compute(neuralnet5,as.matrix(data.test))
+      c6<-compute(neuralnet6,as.matrix(data.test))
+
+      neuralnet.result <- rep(0,dim(data.test)[1])
+
+      for(myVar in 1:dim(data.test)[1]){
+        index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
+        neuralnet.result[myVar] <- index
+      }
+      neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
+      nn.f.error[j-1] <- nn.forward.error[j-1] + 1-sum(diag(neuralnet.perf))/length(y.testfold)
+  }
   
   
   # ===
@@ -554,6 +690,12 @@ for(i in 1:K){
     qda.forward.pred <- predict(qda.forward,newdata=as.data.frame(X.forward.data[folds==i,1:j]))
     qda.forward.perf <- table(y.app[folds==i],qda.forward.pred$class)
     qda.forward.error[j-1] <-qda.forward.error[j-1] + 1 - sum(diag(qda.forward.perf))/numberTest
+
+    # F
+    qda.f <- qda(y.app[folds!=i]~., data=as.data.frame(X.f.data[folds!=i,1:j]))
+    qda.f.pred <- predict(qda.f,newdata=as.data.frame(X.f.data[folds==i,1:j]))
+    qda.f.perf <- table(y.app[folds==i],qda.f.pred$class)
+    qda.f.error[j-1] <-qda.f.error[j-1] + 1 - sum(diag(qda.f.perf))/numberTest
   }
   
   # FDA
@@ -567,92 +709,112 @@ for(i in 1:K){
 qda.acp.error <-(qda.acp.error/K)*100
 qda.lda.error <-(qda.lda.error/K)*100
 qda.forward.error <-(qda.forward.error/K)*100
+qda.f.error <-(qda.f.error/K)*100
 
 lda.acp.error <-(lda.acp.error/K)*100
 lda.lda.error <-(lda.lda.error/K)*100
 lda.forward.error <-(lda.forward.error/K)*100
+lda.f.error <-(lda.f.error/K)*100
 
 knn.acp.error <- (knn.acp.error/K)*100
 knn.lda.error <- (knn.lda.error/K)*100
 knn.forward.error <- (knn.forward.error/K)*100
+knn.f.error <- (knn.f.error/K)*100
 
 logReg.acp.error <- (logReg.acp.error/K)*100
 logReg.lda.error <- (logReg.lda.error/K)*100
 logReg.forward.error <- (logReg.forward.error/K)*100
+logReg.f.error <- (logReg.f.error/K)*100
 
 nb.acp.error <- (nb.acp.error/K)*100
 nb.lda.error <- (nb.lda.error/K)*100
 nb.forward.error <- (nb.forward.error/K)*100
+nb.f.error <- (nb.f.error/K)*100
 
 svm.acp.error <- (svm.acp.error/K)*100
 svm.lda.error <- (svm.lda.error/K)*100
 svm.forward.error <- (svm.forward.error/K)*100
+svm.f.error <- (svm.f.error/K)*100
 
 svm.tune.acp.error <- (svm.tune.acp.error/K)*100
 svm.tune.lda.error <- (svm.tune.lda.error/K)*100
 svm.tune.forward.error <- (svm.tune.forward.error/K)*100
+svm.tune.f.error <- (svm.tune.f.error/K)*100
 
 tree.acp.error <- (tree.acp.error/K)*100
 tree.lda.error <- (tree.lda.error/K)*100
 tree.forward.error <- (tree.forward.error/K)*100
+tree.f.error <- (tree.f.error/K)*100
 
 rf.acp.error <- (rf.acp.error/K)*100
 rf.lda.error <- (rf.lda.error/K)*100
 rf.forward.error <- (rf.forward.error/K)*100
+rf.f.error <- (rf.f.error/K)*100
 
 nn.acp.error <- (nn.acp.error/K)*100
 nn.lda.error <- (nn.lda.error/K)*100
 nn.forward.error <- (nn.forward.error/K)*100
+nn.f.error <- (nn.f.error/K)*100
 
 print("QDA :")
 print(min(qda.acp.error))
 print(min(qda.lda.error))
 print(min(qda.forward.error))
+print(min(qda.f.error))
 
 print("LDA :")
 print(min(lda.acp.error))
 print(min(lda.lda.error))
 print(min(lda.forward.error))
+print(min(lda.f.error))
 
 print("KNN :")
 print(min(knn.acp.error))
 print(min(knn.lda.error))
 print(min(knn.forward.error))
+print(min(knn.f.error))
 
 print("RegLog :")
 print(min(logReg.acp.error))
 print(min(logReg.lda.error))
 print(min(logReg.forward.error))
+print(min(logReg.f.error))
 
 print("Naive Bayesien :")
 print(min(nb.acp.error))
 print(min(nb.lda.error))
 print(min(nb.forward.error))
+print(min(nb.f.error))
 
 print("SVM :")
 print(min(svm.acp.error))
 print(min(svm.lda.error))
 print(min(svm.forward.error))
+print(min(svm.f.error))
 
 print("SVM Tune:")
 print(min(svm.tune.acp.error))
 print(min(svm.tune.lda.error))
 print(min(svm.tune.forward.error))
+print(min(svm.tune.f.error))
 
 print("Tree:")
 print(min(tree.acp.error))
 print(min(tree.lda.error))
 print(min(tree.forward.error))
+print(min(tree.f.error))
 
 print("Random Forest :")
 print(min(rf.acp.error))
 print(min(rf.lda.error))
 print(min(rf.forward.error))
+print(min(rf.f.error))
 
 print("Neural network :")
 print(min(nn.acp.error))
 print(min(nn.lda.error))
 print(min(nn.forward.error))
+print(min(nn.f.error))
 
 final <- Sys.time()
 print("temp final d'execution :")
