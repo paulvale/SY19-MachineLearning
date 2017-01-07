@@ -522,6 +522,23 @@ for (neurone in 3:15)
 #- ACP2 : 41.82108088 avec 13 neurones
 #- forward : 27.80793716 avec 13 neurones
 #- LDA : 30.69334587 avec 10 neurones
+
+min=10
+max=60
+plot(c(3:14),acp1.error.net[1:12],type="l", ylim=c(min,max), ylab="", xlab="",col='blue')
+par(new=TRUE)
+plot(c(3:14),fda.error.net[1:12],type="l", ylim=c(min,max), ylab="", xlab="",col='green')
+par(new=TRUE)
+plot(c(3:14),forward.error.net.tot[1:12],type="l",  ylim=c(min,max), ylab="", xlab="",col='black')
+
+min=10
+max=60
+plot(c(3:14),acp1.error.neuralnet[1:12],type="l", ylim=c(min,max), ylab="", xlab="",col='blue')
+par(new=TRUE)
+plot(c(3:14),fda.error.neuralnetBP[1:12],type="l",  ylim=c(min,max), ylab="", xlab="",col='red')
+par(new=TRUE)
+plot(c(3:14),fda.error.neuralnetNoBP[1:12],type="l", ylim=c(min,max), ylab="", xlab="",col='green')
+
 for(neurone2 in 3:9)
 {
 	cat("neurone : ", neurone2," sur 15\n")
@@ -717,6 +734,11 @@ fda.error.neuralnetNoBP2<- c(8.730250142,10.444535856,9.259877378,7.972341384,10
 # -LDA + BP : 28.66541302% avec 8 neurones
 # -LDA : 7.972341384 avec 6 neurones
 
+min=0
+max=40
+plot(c(3:9),fda.error.neuralnetBP2[1:7],type="l", ylim=c(min,max), ylab="", xlab="",col='blue')
+par(new=TRUE)
+plot(c(3:9),fda.error.neuralnetNoBP2[1:7],type="l", ylim=c(min,max), ylab="", xlab="",col='green')
 # les meilleurs résultats sont pour size = 9 et le FDA. On a fait tourner une boucle de 5 a 15 noeuds cachés
 
 
