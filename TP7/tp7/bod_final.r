@@ -1,7 +1,7 @@
 # LOAD PACKAGES 
 # =============
 rm(list=ls())
-load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/data/data_expressions.RData")
+load("data/data_expressions.RData")
 library(MASS)
 library(leaps)
 library(glmnet)
@@ -126,6 +126,12 @@ nn.acp.error <- rep(0,159)
 nn.lda.error <- 0
 nn.forward.error <- rep(0, 159)
 nn.f.error <- rep(0, 159)
+c1<-0
+c2<-0
+c3<-0
+c4<-0
+c5<-0
+c6<-0
 
 depart <- Sys.time()
 # ====
@@ -236,6 +242,12 @@ for(i in 1:K){
     tree.acp.error[j-1] <-tree.acp.error[j-1] + 1 - sum(diag(tree.acp.perf))/numberTest
 
     # Neural Network
+    neuralnet1<-0
+    neuralnet2<-0
+    neuralnet3<-0
+    neuralnet4<-0
+    neuralnet5<-0
+    neuralnet6<-0
     data.train = X.acp.data[folds!=i,1:j]
     data.test = X.acp.data[folds==i,1:j]
     y.train = y.app[folds!=i]
@@ -253,43 +265,55 @@ for(i in 1:K){
       if(kk==1){
         neuralnet1 <- NULL
         while(is.null(neuralnet1$result.matrix)){
-          neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }else if( kk==2){
         neuralnet2 <- NULL
         while(is.null(neuralnet2$result.matrix)){
-          neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }else if(kk==3){
         neuralnet3 <- NULL
         while(is.null(neuralnet3$result.matrix)){
-          neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }else if(kk==4){
         neuralnet4 <- NULL
         while(is.null(neuralnet4$result.matrix)){
-          neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }else if(kk==5){
         neuralnet5 <- NULL
         while(is.null(neuralnet5$result.matrix)){
-          neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }else if(kk==6){
         neuralnet6 <- NULL
         while(is.null(neuralnet6$result.matrix)){
-          neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+          neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }
     }
 
     # predictions 
-    c1<-compute(neuralnet1,as.matrix(data.test))
-    c2<-compute(neuralnet2,as.matrix(data.test))
-    c3<-compute(neuralnet3,as.matrix(data.test))
-    c4<-compute(neuralnet4,as.matrix(data.test))
-    c5<-compute(neuralnet5,as.matrix(data.test))
-    c6<-compute(neuralnet6,as.matrix(data.test))
+    if(!is.null(neuralnet1$net.result)){
+        c1<-compute(neuralnet1,as.matrix(data.test))
+      } else {c1$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet2$net.result)){
+        c2<-compute(neuralnet2,as.matrix(data.test))
+      } else {c2$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet3$net.result)){
+        c3<-compute(neuralnet3,as.matrix(data.test))
+      } else {c3$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet4$net.result)){
+        c4<-compute(neuralnet4,as.matrix(data.test))
+      } else {c4$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet5$net.result)){
+        c5<-compute(neuralnet5,as.matrix(data.test))
+      } else {c5$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet6$net.result)){
+        c6<-compute(neuralnet6,as.matrix(data.test))
+      } else {c6$net.result<-rep(0,dim(data.test)[1])}
 
     neuralnet.result <- rep(0,dim(data.test)[1])
 
@@ -362,6 +386,12 @@ for(i in 1:K){
     tree.forward.error[j-1] <-tree.forward.error[j-1] + 1 - sum(diag(tree.forward.perf))/numberTest
 
     # Neural Network
+    neuralnet1<-0
+    neuralnet2<-0
+    neuralnet3<-0
+    neuralnet4<-0
+    neuralnet5<-0
+    neuralnet6<-0
     data.train = X.forward.data[folds!=i,1:j]
     data.test = X.forward.data[folds==i,1:j]
     y.train = y.app[folds!=i]
@@ -380,42 +410,54 @@ for(i in 1:K){
         if(kk==1) {
           neuralnet1 <- NULL
           while(is.null(neuralnet1$result.matrix)){
-            neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if( kk==2) {
           neuralnet2 <- NULL
           while(is.null(neuralnet2$result.matrix)){
-            neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==3){
           neuralnet3 <- NULL
           while(is.null(neuralnet3$result.matrix)){
-            neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==4){
           neuralnet4 <- NULL
           while(is.null(neuralnet4$result.matrix)){
-            neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==5){
           neuralnet5 <- NULL
           while(is.null(neuralnet5$result.matrix)){
-            neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==6){
           neuralnet6 <- NULL
           while(is.null(neuralnet6$result.matrix)){
-            neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         }
       }
       # predictions 
-      c1<-compute(neuralnet1,as.matrix(data.test))
-      c2<-compute(neuralnet2,as.matrix(data.test))
-      c3<-compute(neuralnet3,as.matrix(data.test))
-      c4<-compute(neuralnet4,as.matrix(data.test))
-      c5<-compute(neuralnet5,as.matrix(data.test))
-      c6<-compute(neuralnet6,as.matrix(data.test))
+      if(!is.null(neuralnet1$net.result)){
+        c1<-compute(neuralnet1,as.matrix(data.test))
+      } else {c1$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet2$net.result)){
+        c2<-compute(neuralnet2,as.matrix(data.test))
+      } else {c2$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet3$net.result)){
+        c3<-compute(neuralnet3,as.matrix(data.test))
+      } else {c3$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet4$net.result)){
+        c4<-compute(neuralnet4,as.matrix(data.test))
+      } else {c4$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet5$net.result)){
+        c5<-compute(neuralnet5,as.matrix(data.test))
+      } else {c5$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet6$net.result)){
+        c6<-compute(neuralnet6,as.matrix(data.test))
+      } else {c6$net.result<-rep(0,dim(data.test)[1])}
 
       neuralnet.result <- rep(0,dim(data.test)[1])
 
@@ -488,6 +530,12 @@ for(i in 1:K){
     tree.f.error[j-1] <-tree.f.error[j-1] + 1 - sum(diag(tree.f.perf))/numberTest
 
     # Neural Network
+    neuralnet1<-0
+    neuralnet2<-0
+    neuralnet3<-0
+    neuralnet4<-0
+    neuralnet5<-0
+    neuralnet6<-0
     data.train = X.f.data[folds!=i,1:j]
     data.test = X.f.data[folds==i,1:j]
     y.train = y.app[folds!=i]
@@ -506,42 +554,54 @@ for(i in 1:K){
         if(kk==1) {
           neuralnet1 <- NULL
           while(is.null(neuralnet1$result.matrix)){
-            neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if( kk==2) {
           neuralnet2 <- NULL
           while(is.null(neuralnet2$result.matrix)){
-            neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==3){
           neuralnet3 <- NULL
           while(is.null(neuralnet3$result.matrix)){
-            neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==4){
           neuralnet4 <- NULL
           while(is.null(neuralnet4$result.matrix)){
-            neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==5){
           neuralnet5 <- NULL
           while(is.null(neuralnet5$result.matrix)){
-            neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         } else if(kk==6){
           neuralnet6 <- NULL
           while(is.null(neuralnet6$result.matrix)){
-            neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+            neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
           }
         }
       }
       # predictions 
-      c1<-compute(neuralnet1,as.matrix(data.test))
-      c2<-compute(neuralnet2,as.matrix(data.test))
-      c3<-compute(neuralnet3,as.matrix(data.test))
-      c4<-compute(neuralnet4,as.matrix(data.test))
-      c5<-compute(neuralnet5,as.matrix(data.test))
-      c6<-compute(neuralnet6,as.matrix(data.test))
+      if(!is.null(neuralnet1$net.result)){
+        c1<-compute(neuralnet1,as.matrix(data.test))
+      } else {c1$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet2$net.result)){
+        c2<-compute(neuralnet2,as.matrix(data.test))
+      } else {c2$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet3$net.result)){
+        c3<-compute(neuralnet3,as.matrix(data.test))
+      } else {c3$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet4$net.result)){
+        c4<-compute(neuralnet4,as.matrix(data.test))
+      } else {c4$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet5$net.result)){
+        c5<-compute(neuralnet5,as.matrix(data.test))
+      } else {c5$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet6$net.result)){
+        c6<-compute(neuralnet6,as.matrix(data.test))
+      } else {c6$net.result<-rep(0,dim(data.test)[1])}
 
       neuralnet.result <- rep(0,dim(data.test)[1])
 
@@ -550,7 +610,7 @@ for(i in 1:K){
         neuralnet.result[myVar] <- index
       }
       neuralnet.perf <- table(factor(neuralnet.result, levels=1:6),y.testfold)
-      nn.f.error[j-1] <- nn.forward.error[j-1] + 1-sum(diag(neuralnet.perf))/length(y.testfold)
+      nn.f.error[j-1] <- nn.f.error[j-1] + 1-sum(diag(neuralnet.perf))/length(y.testfold)
   }
   
   
@@ -613,6 +673,12 @@ for(i in 1:K){
   }
   
   # Neural Network
+    neuralnet1<-0
+    neuralnet2<-0
+    neuralnet3<-0
+    neuralnet4<-0
+    neuralnet5<-0
+    neuralnet6<-0
   data.train = X.lda.data
   data.test = X.lda.testfold
   y.train = y.app[folds!=i]
@@ -630,42 +696,55 @@ for(i in 1:K){
     if(kk==1) {
       neuralnet1 <- NULL
       while(is.null(neuralnet1$result.matrix)){
-        neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+        neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }
     } else if( kk==2){
       neuralnet2 <- NULL
       while(is.null(neuralnet2$result.matrix)){
-        neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+        neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }
     } else if(kk==3){
       neuralnet3 <- NULL
       while(is.null(neuralnet3$result.matrix)){
-        neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+        neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }
     } else if(kk==4){
       neuralnet4 <- NULL
       while(is.null(neuralnet4$result.matrix)){
-        neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+        neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }
     } else if(kk==5){
       neuralnet5 <- NULL
       while(is.null(neuralnet5$result.matrix)){
-        neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+        neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }
     } else if(kk==6){
       neuralnet6 <- NULL
       while(is.null(neuralnet6$result.matrix)){
-        neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=3,err.fct="ce",linear.output=FALSE)
+        neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }
     }
   }
   # predictions 
-  c1<-compute(neuralnet1,as.matrix(data.test))
-  c2<-compute(neuralnet2,as.matrix(data.test))
-  c3<-compute(neuralnet3,as.matrix(data.test))
-  c4<-compute(neuralnet4,as.matrix(data.test))
-  c5<-compute(neuralnet5,as.matrix(data.test))
-  c6<-compute(neuralnet6,as.matrix(data.test))
+      if(!is.null(neuralnet1$net.result)){
+        c1<-compute(neuralnet1,as.matrix(data.test))
+      } else {c1$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet2$net.result)){
+        c2<-compute(neuralnet2,as.matrix(data.test))
+      } else {c2$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet3$net.result)){
+        c3<-compute(neuralnet3,as.matrix(data.test))
+      } else {c3$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet4$net.result)){
+        c4<-compute(neuralnet4,as.matrix(data.test))
+      } else {c4$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet5$net.result)){
+        c5<-compute(neuralnet5,as.matrix(data.test))
+      } else {c5$net.result<-rep(0,dim(data.test)[1])}
+      if(!is.null(neuralnet6$net.result)){
+        c6<-compute(neuralnet6,as.matrix(data.test))
+      } else {c6$net.result<-rep(0,dim(data.test)[1])}
+
   neuralnet.result <- rep(0,dim(data.test)[1])
   for(myVar in 1:dim(data.test)[1]){
     index <- which.max(c(c1$net.result[myVar],c2$net.result[myVar],c3$net.result[myVar],c4$net.result[myVar],c5$net.result[myVar],c6$net.result[myVar]))
