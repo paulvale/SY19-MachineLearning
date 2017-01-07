@@ -51,7 +51,7 @@ nn.acp.error.k5 <- nn.acp.error
 nn.lda.error.k5 <- nn.lda.error
 nn.forward.error.k5 <- nn.forward.error
 
-load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/end_10_2.rData")
+load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/end_10_forward.rData")
 
 vectorTree <- seq(100,1500,100)
 

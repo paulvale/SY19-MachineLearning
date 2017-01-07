@@ -214,7 +214,7 @@ for(i in 1:K){
     # Naive Baeysien
     nb.acp <- naiveBayes(factor(y.app[folds!=i])~., data=as.data.frame(X.acp.data[folds!=i,1:j]))
     nb.acp.pred <- predict(nb.acp,newdata=as.data.frame(X.acp.data[folds==i,1:j]))
-    nb.acp.perf <- table(factor(y.app[folds==i]),factor(lnb.acp.pred, levels=1:6))
+    nb.acp.perf <- table(factor(y.app[folds==i]),factor(nb.acp.pred, levels=1:6))
     nb.acp.error[j-1] <-nb.acp.error[j-1] + 1 - sum(diag(nb.acp.perf))/numberTest
     
     # SVM
