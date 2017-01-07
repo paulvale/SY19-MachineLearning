@@ -263,35 +263,17 @@ for(i in 1:K){
       newDataSet <- data.frame(data.train,response)
       formule = getFormulas(colnames(newDataSet), ordre,"response")
       if(kk==1){
-        neuralnet1 <- NULL
-        while(is.null(neuralnet1$result.matrix)){
-          neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-        }
+        neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }else if( kk==2){
-        neuralnet2 <- NULL
-        while(is.null(neuralnet2$result.matrix)){
-          neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-        }
+        neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }else if(kk==3){
-        neuralnet3 <- NULL
-        while(is.null(neuralnet3$result.matrix)){
-          neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-        }
+        neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }else if(kk==4){
-        neuralnet4 <- NULL
-        while(is.null(neuralnet4$result.matrix)){
-          neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-        }
+        neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }else if(kk==5){
-        neuralnet5 <- NULL
-        while(is.null(neuralnet5$result.matrix)){
-          neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-        }
+        neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }else if(kk==6){
-        neuralnet6 <- NULL
-        while(is.null(neuralnet6$result.matrix)){
-          neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-        }
+        neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
       }
     }
 
@@ -408,35 +390,17 @@ for(i in 1:K){
         newDataSet <- data.frame(data.train,response)
         formule = getFormulas(colnames(newDataSet), ordre,"response")
         if(kk==1) {
-          neuralnet1 <- NULL
-          while(is.null(neuralnet1$result.matrix)){
-            neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if( kk==2) {
-          neuralnet2 <- NULL
-          while(is.null(neuralnet2$result.matrix)){
-            neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==3){
-          neuralnet3 <- NULL
-          while(is.null(neuralnet3$result.matrix)){
-            neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==4){
-          neuralnet4 <- NULL
-          while(is.null(neuralnet4$result.matrix)){
-            neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==5){
-          neuralnet5 <- NULL
-          while(is.null(neuralnet5$result.matrix)){
-            neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==6){
-          neuralnet6 <- NULL
-          while(is.null(neuralnet6$result.matrix)){
-            neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }
       # predictions 
@@ -552,35 +516,17 @@ for(i in 1:K){
         newDataSet <- data.frame(data.train,response)
         formule = getFormulas(colnames(newDataSet), ordre,"response")
         if(kk==1) {
-          neuralnet1 <- NULL
-          while(is.null(neuralnet1$result.matrix)){
-            neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if( kk==2) {
-          neuralnet2 <- NULL
-          while(is.null(neuralnet2$result.matrix)){
-            neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==3){
-          neuralnet3 <- NULL
-          while(is.null(neuralnet3$result.matrix)){
-            neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==4){
-          neuralnet4 <- NULL
-          while(is.null(neuralnet4$result.matrix)){
-            neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==5){
-          neuralnet5 <- NULL
-          while(is.null(neuralnet5$result.matrix)){
-            neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         } else if(kk==6){
-          neuralnet6 <- NULL
-          while(is.null(neuralnet6$result.matrix)){
-            neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-          }
+          neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
         }
       }
       # predictions 
@@ -694,35 +640,17 @@ for(i in 1:K){
     newDataSet <- data.frame(data.train,response)
     formule = getFormulas(colnames(newDataSet), ordre,"response")
     if(kk==1) {
-      neuralnet1 <- NULL
-      while(is.null(neuralnet1$result.matrix)){
-        neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-      }
+      neuralnet1 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
     } else if( kk==2){
-      neuralnet2 <- NULL
-      while(is.null(neuralnet2$result.matrix)){
-        neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-      }
+      neuralnet2 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
     } else if(kk==3){
-      neuralnet3 <- NULL
-      while(is.null(neuralnet3$result.matrix)){
-        neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-      }
+      neuralnet3 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
     } else if(kk==4){
-      neuralnet4 <- NULL
-      while(is.null(neuralnet4$result.matrix)){
-        neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-      }
+      neuralnet4 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
     } else if(kk==5){
-      neuralnet5 <- NULL
-      while(is.null(neuralnet5$result.matrix)){
-        neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-      }
+      neuralnet5 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
     } else if(kk==6){
-      neuralnet6 <- NULL
-      while(is.null(neuralnet6$result.matrix)){
-        neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
-      }
+      neuralnet6 <- neuralnet(formule[dim(data.train)[2]],newDataSet,hidden=c(11,6),err.fct="ce",linear.output=FALSE)
     }
   }
   # predictions 
