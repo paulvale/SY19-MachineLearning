@@ -23,7 +23,6 @@ X.reduct.dim <- dim(X.reduct)
 firstReduct <- X.dim[2] - X.reduct.dim[2]
 # Nous avons donc deja supprime 540 colonnes qui ne nous sont pas utiles ici sans perte d'informations
 
-
 # ====
 # Division de X en app et test
 # ====

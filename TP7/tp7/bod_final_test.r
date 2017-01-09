@@ -422,12 +422,12 @@ logReg.test.f.error <-(1 - sum(diag(logReg.test.f.perf))/X.test.dim[1])*100
 logReg.app.f.error <- min(logReg.f.error)
 
 # LDA
-ind <- which.min(lda.f.error)
-lda.test.f <- lda(y.app~., data=as.data.frame(X.f.data[,1:ind]))
-lda.test.f.pred <- predict(lda.test.f,newdata=as.data.frame(X.f.test[,1:ind]))
+# ind <- which.min(lda.f.error)
+lda.test.f <- lda(y.app~., data=as.data.frame(X.f.data[,1:15]))
+lda.test.f.pred <- predict(lda.test.f,newdata=as.data.frame(X.f.test[,1:15]))
 lda.test.f.perf <- table(y.test,lda.test.f.pred$class)
 lda.test.f.error <- (1 - sum(diag(lda.test.f.perf))/X.test.dim[1])*100
-lda.app.f.error <- min(lda.f.error)
+lda.app.f.error <- lda.f.error[15]
 
 # KNN
 ind <-  which(knn.f.error == min(knn.f.error), arr.ind = TRUE) 

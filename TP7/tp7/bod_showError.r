@@ -15,7 +15,7 @@ source_url('https://gist.githubusercontent.com/fawda123/7471137/raw/466c1474d0a5
 
 
 # LOAD DATA
-load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/end_10_forward.rData")
+load("~/Documents/UTC/A16/SY19/TPs_Desktop/TP/TP7/tp7/end_final.rData")
 
 vectorTree <- seq(100,1500,100)
 
@@ -399,7 +399,6 @@ plot(svm.test.acp.error,type="l", col="red", ylim=c(min,max), ylab="", xlab="")
 par(new=TRUE)
 plot(svm.acp.error, type="l", xlab="number of principal components", ylab="MSE",ylim=c(min,max), main="Evolution of error with ACP Data / SVM")
 
-print("PROB")
 min <- min(c(svm.forward.error, svm.test.forward.error))
 max <- max(c(svm.forward.error, svm.test.forward.error))
 plot(svm.test.forward.error,type="l", col="red", ylim=c(min,max), ylab="", xlab="")
