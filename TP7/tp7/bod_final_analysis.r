@@ -11,6 +11,7 @@ min <- min(knn.acp.error.mean, knn.forward.error.mean, knn.f.error.mean)
 max <- max(knn.acp.error.mean, knn.forward.error.mean, knn.f.error.mean)
 
 plot(knn.acp.error.mean, type="l", col="blue",xlab="number of principal components", ylab="MSE", main="Evolution of error", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      "),lty=1, lwd=2.5,col=c("blue","red","green"))
 par(new=TRUE)
 plot(knn.forward.error.mean, type="l",col="red", xlab="", ylab="", main="",ylim=c(min,max))
 par(new=TRUE)
@@ -26,12 +27,23 @@ min <- min(knn.acp.error.mean, knn.forward.error.mean, knn.f.error.mean, knn.lda
 max <- max(knn.acp.error.mean, knn.forward.error.mean, knn.f.error.mean, knn.lda.error)
 
 plot(knn.acp.error.mean, type="l",col="blue", xlab="number of neighbors", ylab="MSE", main="Evolution of error", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      ","FDA"),lty=1, lwd=2.5,col=c("blue","red","green","black"))
 par(new=TRUE)
 plot(knn.forward.error.mean, type="l", col="red",xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
 plot(knn.f.error.mean, type="l", col="green",xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
 plot(knn.lda.error, type="l", xlab="", ylab="", main="", ylim=c(min,max))
+par(new=FALSE)
+
+min <- min(knn.acp.error[20,], knn.forward.error[12,], knn.f.error[15,])
+max <- max(knn.acp.error[20,], knn.forward.error[12,], knn.f.error[15,])
+plot(knn.acp.error[20,], type="l",col="blue", xlab="number of neighbors", ylab="MSE", main="Evolution of error", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      ","FDA"),lty=1, lwd=2.5,col=c("blue","red","green","black"))
+par(new=TRUE)
+plot(knn.forward.error[12,], type="l", col="red",xlab="", ylab="", main="", ylim=c(min,max))
+par(new=TRUE)
+plot(knn.f.error[15,], type="l", col="green",xlab="", ylab="", main="", ylim=c(min,max))
 par(new=FALSE)
 
 # RF
@@ -44,6 +56,7 @@ min <- min(rf.acp.error.mean, rf.forward.error.mean, rf.f.error.mean)
 max <- max(rf.acp.error.mean, rf.forward.error.mean, rf.f.error.mean)
 
 plot(rf.acp.error.mean, type="l", col="blue",xlab="number of principal components", ylab="MSE", main="Evolution of error", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      "),lty=1, lwd=2.5,col=c("blue","red","green"))
 par(new=TRUE)
 plot(rf.forward.error.mean, type="l", col="red",xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
@@ -59,6 +72,7 @@ min <- min(rf.acp.error.mean, rf.forward.error.mean, rf.f.error.mean, rf.lda.err
 max <- max(rf.acp.error.mean, rf.forward.error.mean, rf.f.error.mean, rf.lda.error)
 
 plot(vectorTree,rf.acp.error.mean, type="l", col="blue",xlab="number of trees", ylab="MSE", main="Evolution of error", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      ","FDA"),lty=1, lwd=2.5,col=c("blue","red","green","black"))
 par(new=TRUE)
 plot(vectorTree,rf.forward.error.mean, type="l", col="red",xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
@@ -85,6 +99,7 @@ min <- min(logReg.acp.error, logReg.forward.error, logReg.f.error)
 max <- max(logReg.acp.error, logReg.forward.error, logReg.f.error)
 
 plot(logReg.acp.error, type="l",col="blue", xlab="number of principal components", ylab="MSE", main="Evolution of error", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      "),lty=1, lwd=2.5,col=c("blue","red","green"))
 par(new=TRUE)
 plot(logReg.forward.error, type="l",col="red", xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
@@ -101,6 +116,7 @@ par(new=TRUE)
 plot(nb.forward.error, type="l",col="red", xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
 plot(nb.f.error, type="l", col="green",xlab="", ylab="", main="", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      "),lty=1, lwd=2.5,col=c("blue","red","green"))
 par(new=FALSE)
 
 # SVM
@@ -113,6 +129,7 @@ par(new=TRUE)
 plot(svm.forward.error, type="l", col="red",xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
 plot(svm.f.error, type="l", col="green",xlab="", ylab="", main="", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      "),lty=1, lwd=2.5,col=c("blue","red","green"))
 par(new=FALSE)
 
 # SVM Tune
@@ -125,6 +142,7 @@ par(new=TRUE)
 plot(svm.tune.forward.error, type="l",col="red", xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
 plot(svm.tune.f.error, type="l", col="green", xlab="", ylab="", main=" ", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      "),lty=1, lwd=2.5,col=c("blue","red","green"))
 par(new=FALSE)
 
 # Tree
@@ -133,6 +151,7 @@ min <- min(tree.acp.error, tree.forward.error, tree.f.error)
 max <- max(tree.acp.error, tree.forward.error, tree.f.error)
 
 plot(tree.acp.error, type="l",col="blue", xlab="number of principal components", ylab="MSE", main="Evolution of error", ylim=c(min,max))
+legend('topright',c("ACP","Fwd","Fwd ACP      "),lty=1, lwd=2.5,col=c("blue","red","green"))
 par(new=TRUE)
 plot(tree.forward.error, type="l",col="red", xlab="", ylab="", main="", ylim=c(min,max))
 par(new=TRUE)
